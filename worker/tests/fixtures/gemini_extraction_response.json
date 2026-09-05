@@ -1,0 +1,61 @@
+{
+  "caller_name": "Arthur",
+  "last_name": "Pendelton",
+  "agent_alias": null,
+  "caller_email": "arthur.pendelton@example.com",
+  "caller_rules": null,
+  "persona_directives": null,
+  "loved_ones": "Daughter Sarah (Denver, visiting next Friday)",
+  "reminders": [
+    {
+      "text": "Pick up birthday cake for Sarah",
+      "due": "next Friday 9am"
+    }
+  ],
+  "completed_reminders": [],
+  "clarifications": [],
+  "agent_tasks": [
+    "Email the recipe to arthur.pendelton@example.com"
+  ],
+  "lifecycle_events": [],
+  "memory_commands": [],
+  "wellbeing": null,
+  "open_threads": [
+    {
+      "topic": "Sarah birthday visit",
+      "detail": "Sarah visiting from Denver next Friday"
+    }
+  ],
+  "call_summary": "Arthur mentioned his daughter Sarah is visiting from Denver next Friday and asked for a cake reminder call.",
+  "corrections": [],
+  "disengaged_topics": [],
+  "family": {
+    "Sarah": "Daughter living in Denver, visiting next Friday for birthday"
+  },
+  "pets": null,
+  "hobbies": null,
+  "health": null,
+  "vehicles": null,
+  "work": null,
+  "preferences": null,
+  "places": {
+    "Denver": "Where daughter Sarah lives"
+  },
+  "finances": null,
+  "skills": null,
+  "ours": {
+    "cake reminder": "promised to call him at 9am next Friday for Sarah's cake"
+  },
+  "her_side": null,
+  "he_asked_about_her": false,
+  "connection": "Warm, cheerful, excited about his daughter's visit.",
+  "opening_bridge": "Ask how Sarah's visit from Denver went and if she liked the birthday cake.",
+  "milestones": [
+    {
+      "event": "Sarah's birthday dinner",
+      "date_text": "next Friday",
+      "detail": "Sarah visiting from Denver"
+    }
+  ],
+  "emotional_tone": "Happy and excited for family visit."
+}

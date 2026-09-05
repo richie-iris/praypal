@@ -1,0 +1,343 @@
+{
+  "_comment": "Gemini prebuilt voices shared by Live API and TTS.",
+  "voices": [
+    {
+      "name": "Aoede",
+      "style": "Breezy",
+      "tags": [
+        "light",
+        "airy",
+        "friendly"
+      ],
+      "gender": "female",
+      "age": "young adult",
+      "pitch_hz": 156
+    },
+    {
+      "name": "Achernar",
+      "style": "Soft",
+      "tags": [
+        "gentle",
+        "quiet",
+        "soothing"
+      ],
+      "gender": "female",
+      "age": "adult",
+      "pitch_hz": 167
+    },
+    {
+      "name": "Achird",
+      "style": "Friendly",
+      "tags": [
+        "warm",
+        "approachable"
+      ],
+      "gender": "male",
+      "age": "adult",
+      "pitch_hz": 137
+    },
+    {
+      "name": "Algenib",
+      "style": "Gravelly",
+      "tags": [
+        "rough",
+        "deep",
+        "textured"
+      ],
+      "gender": "male",
+      "age": "older adult",
+      "pitch_hz": 128
+    },
+    {
+      "name": "Algieba",
+      "style": "Smooth",
+      "tags": [
+        "even",
+        "polished"
+      ],
+      "gender": "male",
+      "age": "adult",
+      "pitch_hz": 115
+    },
+    {
+      "name": "Alnilam",
+      "style": "Firm",
+      "tags": [
+        "confident",
+        "steady"
+      ],
+      "gender": "male",
+      "age": "middle-aged",
+      "pitch_hz": 98
+    },
+    {
+      "name": "Autonoe",
+      "style": "Bright",
+      "tags": [
+        "cheerful",
+        "clear"
+      ],
+      "gender": "neutral",
+      "age": "adult",
+      "pitch_hz": 154
+    },
+    {
+      "name": "Callirrhoe",
+      "style": "Easy-going",
+      "tags": [
+        "relaxed",
+        "casual",
+        "warm"
+      ],
+      "gender": "female",
+      "age": "adult",
+      "pitch_hz": 164
+    },
+    {
+      "name": "Charon",
+      "style": "Informative",
+      "tags": [
+        "announcer",
+        "clear",
+        "measured"
+      ],
+      "gender": "male",
+      "age": "middle-aged",
+      "pitch_hz": 94
+    },
+    {
+      "name": "Despina",
+      "style": "Smooth",
+      "tags": [
+        "polished",
+        "calm"
+      ],
+      "gender": "female",
+      "age": "adult",
+      "pitch_hz": 169
+    },
+    {
+      "name": "Enceladus",
+      "style": "Breathy",
+      "tags": [
+        "soft",
+        "intimate"
+      ],
+      "gender": "male",
+      "age": "adult",
+      "pitch_hz": 130
+    },
+    {
+      "name": "Erinome",
+      "style": "Clear",
+      "tags": [
+        "crisp",
+        "articulate"
+      ],
+      "gender": "female",
+      "age": "adult",
+      "pitch_hz": 167
+    },
+    {
+      "name": "Fenrir",
+      "style": "Excitable",
+      "tags": [
+        "energetic",
+        "animated"
+      ],
+      "gender": "male",
+      "age": "young adult",
+      "pitch_hz": 118
+    },
+    {
+      "name": "Gacrux",
+      "style": "Mature",
+      "tags": [
+        "older",
+        "seasoned",
+        "steady"
+      ],
+      "gender": "male",
+      "age": "older adult",
+      "pitch_hz": 135
+    },
+    {
+      "name": "Iapetus",
+      "style": "Clear",
+      "tags": [
+        "crisp",
+        "plain"
+      ],
+      "gender": "male",
+      "age": "adult",
+      "pitch_hz": 134
+    },
+    {
+      "name": "Kore",
+      "style": "Firm",
+      "tags": [
+        "confident",
+        "direct"
+      ],
+      "gender": "neutral",
+      "age": "adult",
+      "pitch_hz": 150
+    },
+    {
+      "name": "Laomedeia",
+      "style": "Upbeat",
+      "tags": [
+        "lively",
+        "positive"
+      ],
+      "gender": "female",
+      "age": "young adult",
+      "pitch_hz": 209
+    },
+    {
+      "name": "Leda",
+      "style": "Youthful",
+      "tags": [
+        "young",
+        "bright"
+      ],
+      "gender": "female",
+      "age": "young adult",
+      "pitch_hz": 173
+    },
+    {
+      "name": "Orus",
+      "style": "Firm",
+      "tags": [
+        "confident",
+        "grounded"
+      ],
+      "gender": "male",
+      "age": "adult",
+      "pitch_hz": 118
+    },
+    {
+      "name": "Puck",
+      "style": "Upbeat",
+      "tags": [
+        "playful",
+        "lively"
+      ],
+      "gender": "neutral",
+      "age": "young adult",
+      "pitch_hz": 146
+    },
+    {
+      "name": "Pulcherrima",
+      "style": "Forward",
+      "tags": [
+        "direct",
+        "expressive"
+      ],
+      "gender": "female",
+      "age": "adult",
+      "pitch_hz": 170
+    },
+    {
+      "name": "Rasalgethi",
+      "style": "Informative",
+      "tags": [
+        "explainer",
+        "measured"
+      ],
+      "gender": "neutral",
+      "age": "middle-aged",
+      "pitch_hz": 153
+    },
+    {
+      "name": "Sadachbia",
+      "style": "Lively",
+      "tags": [
+        "energetic",
+        "quick"
+      ],
+      "gender": "male",
+      "age": "young adult",
+      "pitch_hz": 97
+    },
+    {
+      "name": "Sadaltager",
+      "style": "Knowledgeable",
+      "tags": [
+        "authoritative",
+        "calm"
+      ],
+      "gender": "male",
+      "age": "middle-aged",
+      "pitch_hz": 116
+    },
+    {
+      "name": "Schedar",
+      "style": "Even",
+      "tags": [
+        "neutral",
+        "steady"
+      ],
+      "gender": "male",
+      "age": "middle-aged",
+      "pitch_hz": 115
+    },
+    {
+      "name": "Sulafat",
+      "style": "Warm",
+      "tags": [
+        "cozy",
+        "kind",
+        "closest-to-brand"
+      ],
+      "gender": "female",
+      "age": "middle-aged",
+      "pitch_hz": 195
+    },
+    {
+      "name": "Umbriel",
+      "style": "Easy-going",
+      "tags": [
+        "relaxed",
+        "mellow"
+      ],
+      "gender": "male",
+      "age": "adult",
+      "pitch_hz": 102
+    },
+    {
+      "name": "Vindemiatrix",
+      "style": "Gentle",
+      "tags": [
+        "soft",
+        "kind",
+        "elder-friendly"
+      ],
+      "gender": "female",
+      "age": "older adult",
+      "pitch_hz": 158
+    },
+    {
+      "name": "Zephyr",
+      "style": "Bright",
+      "tags": [
+        "clear",
+        "sunny"
+      ],
+      "gender": "female",
+      "age": "young adult",
+      "pitch_hz": 156
+    },
+    {
+      "name": "Zubenelgenubi",
+      "style": "Casual",
+      "tags": [
+        "conversational",
+        "laid-back"
+      ],
+      "gender": "neutral",
+      "age": "adult",
+      "pitch_hz": 153
+    }
+  ]
+}

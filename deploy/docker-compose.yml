@@ -1,0 +1,172 @@
+# The Phone-Pal stack, entire. Lifted verbatim from /opt/phone-pal on the dev
+# box (Linode 173.255.235.130) on 2026-08-30, where it had lived only on that
+# machine — a dead box meant the product could not be rebuilt.
+#
+# One change from the box copy: `build: ./app` became `build: ../worker`,
+# because the code is a sibling directory here. A host is laid out to MATCH this
+# repo — /opt/phone-pal/{deploy,worker} — rather than the compose file being
+# rewritten per host, so what is tested here is what runs there.
+#
+# `name:` is pinned below so the compose project stays "phone-pal" regardless of
+# which directory the file is invoked from; without it, moving the file renames
+# every container and orphans the running ones.
+#
+# Operate from THIS directory:
+#
+#   cp worker.env.example worker.env         # then fill it in
+#   cp livekit.yaml.example livekit.yaml     # then fill in the key/secret
+#   cp sip.yaml.example sip.yaml             # same pair
+#   sed 's/{{HOST}}/your.host/' Caddyfile.template > Caddyfile
+#   docker compose up -d
+#
+# network_mode: host throughout is deliberate and not negotiable: Docker
+# port-mapping a 10,000-port UDP media range is unusable.
+#
+# Every image carries a full version tag. `:latest` and `7-alpine` are floating:
+# a rebuild on a fresh box pulled whatever shipped that morning, and the media
+# server it tested against was not the one it ran. Dependabot
+# (.github/dependabot.yml) proposes the bumps; a human merges them.
+
+# Docker's default json-file driver has NO size limit: these logs grow until the
+# disk does. On a box that also carries the media server that is an outage, not
+# an inconvenience. Every service caps and rotates.
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "50m"
+    max-file: "5"
+
+# The two containers that run OUR code get the same lockdown. The image runs
+# as uid 10001 (worker/Dockerfile); on top of that the root filesystem is
+# read-only, /tmp is the one writable place (greeting-clip cache, scheduler
+# heartbeat — both already live there), every capability is dropped, and a
+# setuid binary cannot regain any. Limits keep one runaway process from taking
+# the media server down with it.
+x-hardened: &hardened
+  read_only: true
+  tmpfs:
+    - /tmp:size=256m
+  cap_drop:
+    - ALL
+  security_opt:
+    - no-new-privileges:true
+
+name: phone-pal
+
+services:
+  redis:
+    image: redis:7.4.11-alpine
+    network_mode: host
+    restart: unless-stopped
+    logging: *default-logging
+    command: redis-server --bind 127.0.0.1 --port 6379 --save "" --appendonly no
+
+  livekit:
+    image: livekit/livekit-server:v1.13.6
+    network_mode: host
+    restart: unless-stopped
+    logging: *default-logging
+    command: --config /etc/livekit.yaml
+    volumes:
+      - ./livekit.yaml:/etc/livekit.yaml:ro
+    depends_on: [redis]
+
+  sip:
+    image: livekit/sip:v1.13.0
+    network_mode: host
+    restart: unless-stopped
+    logging: *default-logging
+    command: --config /etc/sip.yaml
+    volumes:
+      - ./sip.yaml:/etc/sip.yaml:ro
+    depends_on: [livekit, redis]
+
+  caddy:
+    image: caddy:2.11.4-alpine
+    network_mode: host
+    restart: unless-stopped
+    logging: *default-logging
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on: [livekit]
+
+  worker:
+    <<: *hardened
+    build: ../worker
+    network_mode: host
+    restart: unless-stopped
+    logging: *default-logging
+    env_file: ./worker.env
+    depends_on: [livekit]
+    mem_limit: 2g
+    cpus: 2.0
+    labels:
+      autoheal: "true"
+    healthcheck:
+      # /ready (503 on MISCONFIGURATION: missing config, db credentials or
+      # key — a worker that could never serve), not /health (always 200
+      # while the process lives). A Supabase or LiveKit outage does NOT fail
+      # /ready: restarting would not fix it. `restart:` only acts on exit; a
+      # worker that is alive but misconfigured sits there forever unless
+      # autoheal below sees the unhealthy state and bounces it. A required-
+      # but-missing pepper is the other case: agent.py dies at boot before
+      # the health server exists, so `restart:` — not this probe — loops it.
+      # The probe reads RT_DOCKER_HEALTH_HOST/PORT from the container env
+      # (env_file above) with rt_health.py's defaults, so a moved port does
+      # not turn every check into a 'down'.
+      test: ["CMD-SHELL", "python -c \"import os, urllib.request; urllib.request.urlopen('http://%s:%s/ready' % (os.getenv('RT_DOCKER_HEALTH_HOST') or '127.0.0.1', os.getenv('RT_DOCKER_HEALTH_PORT') or '8080'), timeout=2)\" || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  scheduler:
+    <<: *hardened
+    # Same image as worker (rt_scheduler.py ships in the same app/ tree), just
+    # a different entrypoint. Existed as complete, correct code since before
+    # tonight but was never deployed — every scheduled job (outbound calls,
+    # future SMS/email/research) has been silently dead since it was written.
+    build: ../worker
+    network_mode: host
+    restart: unless-stopped
+    logging: *default-logging
+    env_file: ./worker.env
+    # Pinned here AND read by the healthcheck below, so the file the scheduler
+    # writes is the file the probe reads whatever tempfile.gettempdir() says.
+    environment:
+      RT_SCHEDULER_HEARTBEAT_FILE: /tmp/phone_pal_scheduler_heartbeat
+    command: ["python", "rt_scheduler.py"]
+    depends_on: [livekit]
+    mem_limit: 512m
+    cpus: 0.5
+    labels:
+      autoheal: "true"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import os, time; t=float(open(os.getenv('RT_SCHEDULER_HEARTBEAT_FILE') or '/tmp/phone_pal_scheduler_heartbeat').read().strip()); exit(0 if (time.time()-t) < 180 else 1)\" || exit 1"]
+      interval: 60s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  autoheal:
+    # Docker marks a container unhealthy and then does nothing about it.
+    # autoheal restarts any container labelled autoheal=true once its
+    # healthcheck fails. The socket is read-only and this container has no
+    # network at all: the socket is the only thing it needs and the only
+    # thing it gets.
+    image: willfarrell/autoheal:1.2.0
+    network_mode: none
+    restart: always
+    logging: *default-logging
+    environment:
+      AUTOHEAL_CONTAINER_LABEL: autoheal
+      AUTOHEAL_INTERVAL: "15"
+      AUTOHEAL_START_PERIOD: "60"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+volumes:
+  caddy_data:
+  caddy_config:

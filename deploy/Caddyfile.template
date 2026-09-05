@@ -1,0 +1,26 @@
+# TLS in front of the LiveKit server. Render before use:
+#   sed 's/{{HOST}}/173-255-235-130.sslip.io/' Caddyfile.template > Caddyfile
+#
+# The dev box uses an sslip.io name derived from its IP because no real domain
+# was chosen. Any hostname that resolves to this box works; Caddy obtains the
+# certificate itself on first request.
+{{HOST}} {
+	# Twilio's messaging webhook and the MMS assets it fetches are the only two
+	# paths that reach the worker's loopback health server (rt_health.py);
+	# /health and /ready stay on the box. The worker verifies X-Twilio-Signature
+	# over the public URL, so the Host and X-Forwarded-* headers Caddy passes
+	# here are what make that check possible when RT_SMS_WEBHOOK_URL is unset.
+	# docs/RUNBOOK.md described these two handles before this template had them.
+	handle /sms/* {
+		reverse_proxy 127.0.0.1:8080
+	}
+	handle /media/* {
+		reverse_proxy 127.0.0.1:8080
+	}
+	# The daily spend alarm twilio-setup.sh creates posts here; the worker
+	# verifies the signature, then reads today's spend from the API itself.
+	handle /twilio/* {
+		reverse_proxy 127.0.0.1:8080
+	}
+	reverse_proxy 127.0.0.1:7880
+}

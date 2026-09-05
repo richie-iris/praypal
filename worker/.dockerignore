@@ -1,0 +1,29 @@
+# Secrets: the container gets its environment from the box's worker.env.
+# ALL of them, not just two. .env.dev and .env.test were being baked into the
+# image with live keys in them, and .env.dev points LIVEKIT_URL at a box we no
+# longer run — one stray ENV_MODE=dev away from registering the worker on a
+# dead server.
+.env
+.env.*
+
+# Not the worker's: the Electron app shares this checkout and is ~1.8GB.
+desktop/
+
+# Never ship caller data. call_console.py writes a rendered call — transcript,
+# system prompt, phone numbers — to one of these.
+call-console-*.html
+
+# Build and run artifacts.
+.git/
+.github/
+.venv/
+__pycache__/
+*.pyc
+harness/out/
+harness/iris_test_results.json
+
+# Dev-only: the test suite never runs inside the image, and the image is
+# read-only at runtime so nothing in it could write a result anyway.
+tests/
+Dockerfile
+.dockerignore

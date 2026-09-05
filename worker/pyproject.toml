@@ -1,0 +1,71 @@
+[project]
+name = "phone-pal-realtime-agent"
+version = "0.1.0"
+description = "Phone-Pal — a phone companion who remembers you, on Gemini Live + LiveKit"
+requires-python = ">=3.11"
+# Pinned to the 1.6.x SDK line: the worker is built and tested against it.
+dependencies = [
+    "livekit-agents>=1.6.1,<1.7",
+    "livekit-plugins-google>=1.6.1",
+    "python-dotenv>=1.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "sentry-sdk>=2.0.0",
+    "ruff>=0.16.5,<0.17",
+    "pre-commit>=4.0.0",
+    "pyyaml>=6.0",
+    "pip-audit>=2.7.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+asyncio_mode = "auto"
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.ruff.lint]
+# B = bugbear (closure/loop-var traps, mutable defaults), S = bandit (security).
+# E722/F401/F841 are no longer ignored: bare excepts hide real faults and
+# unused names are usually a half-finished edit.
+select = ["E", "F", "W", "B", "S"]
+ignore = [
+    "E501",  # line length
+    "E402",  # module level import not at top (needed for dotenv loading in scripts)
+    "E702",  # multiple statements on one line
+    "E731",  # lambda assignment
+    "E741",  # ambiguous variable name
+]
+
+[tool.ruff.lint.per-file-ignores]
+# assert is the assertion mechanism in tests and the replay/scale harnesses.
+# Tests also probe loopback/all-interface bind resolution (S104) and urlopen
+# against monkeypatched or in-process servers (S310) by design.
+"tests/**" = ["S101", "S104", "S310"]
+"harness/**" = ["S101"]
+# Read-only spec tests: the contract forbids editing them, so their residual
+# lint is waived here rather than in the files.
+"tests/test_doc_drift.py" = ["F401"]
+"tests/test_f_g5_health_logger.py" = ["F401"]
+"tests/test_f_g7_deploy.py" = ["B007", "S108"]
+"tests/test_f_g8_docs.py" = ["B905"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["."]

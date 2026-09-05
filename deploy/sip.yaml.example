@@ -1,0 +1,17 @@
+# LiveKit SIP bridge. Copy to sip.yaml and fill in the SAME key pair as
+# livekit.yaml — this is how the SIP service authenticates to the server.
+#
+# sip_port 5060 and rtp_port 10000-20000 must be open in the host firewall,
+# restricted to the carrier's SIP egress ranges. For Twilio: signaling from
+# one /30 per region (all of them; see firewall-setup.sh), media from
+# 168.86.128.0/18.
+api_key: APIxxxxxxxxxxxx
+api_secret: replace-me-with-the-generated-secret
+ws_url: ws://127.0.0.1:7880
+redis:
+  address: 127.0.0.1:6379
+sip_port: 5060
+rtp_port: 10000-20000
+use_external_ip: true
+logging:
+  level: info

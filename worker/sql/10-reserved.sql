@@ -1,0 +1,15 @@
+-- 10-reserved.sql
+--
+-- Reserved placeholder. This number is intentionally empty.
+--
+-- The original sql/10-scheduled-jobs.sql was applied directly on the dev box
+-- by hand and never committed as a migration. It was then superseded by
+-- sql/15-scheduled-jobs.sql, which re-created the genuinely missing pieces
+-- (rt.scheduled_jobs, its RPCs, rt_set_caller_email) without the stale
+-- rt_get_caller / rt_get_caller_full_bundle bodies that 10 also carried.
+--
+-- The number is kept, as comments only, so the migration sequence stays
+-- contiguous: scripts/migrate.py --status and tests treat a gap as an error,
+-- because a gap is indistinguishable from a file that was lost.
+--
+-- Nothing to apply. Do not put SQL in this file.

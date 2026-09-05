@@ -1,0 +1,25 @@
+# LiveKit server config. Copy to livekit.yaml and fill in the key pair.
+#
+# The key/secret here is a CREDENTIAL and must be unique per box. The dev box
+# generates its own deliberately, so that a lane cannot authenticate into
+# another lane's LiveKit. Generate a fresh pair per environment:
+#
+#   docker run --rm livekit/livekit-server generate-keys
+#
+# The same pair goes in sip.yaml, and in worker.env as LIVEKIT_API_KEY /
+# LIVEKIT_API_SECRET. All three must agree or the worker never registers.
+port: 7880
+rtc:
+  tcp_port: 7881
+  port_range_start: 50000
+  port_range_end: 60000
+  use_external_ip: true
+redis:
+  address: 127.0.0.1:6379
+keys:
+  # <API_KEY>: <API_SECRET>
+  APIxxxxxxxxxxxx: replace-me-with-the-generated-secret
+turn:
+  enabled: false
+logging:
+  level: info

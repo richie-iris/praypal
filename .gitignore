@@ -1,1 +1,39 @@
 .vercel
+
+# ─── Secrets & Credentials ──────────────────────────────────
+.env
+.env.*
+!.env.example
+!.env.test.example
+!.env.harness.example
+worker.env
+!worker.env.example
+lane.env
+!lane.env.example
+livekit.yaml
+!livekit.yaml.example
+sip.yaml
+!sip.yaml.example
+Caddyfile
+!Caddyfile.template
+*.pem
+*.key
+id_rsa*
+id_ed25519*
+
+# ─── Python ──────────────────────────────────────────────────
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+.pytest_cache/
+
+# ─── Editor / OS ─────────────────────────────────────────────
+.DS_Store
+
+# ─── Build & run output ──────────────────────────────────────
+*.log
+*.wav.tmp
+.vercel/

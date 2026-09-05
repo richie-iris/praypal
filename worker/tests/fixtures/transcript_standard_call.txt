@@ -1,0 +1,8 @@
+Caller: Hi there! This is Arthur Pendelton.
+Agent: Good morning Arthur! Wonderful to hear from you.
+Caller: My daughter Sarah is visiting from Denver next Friday for her birthday dinner. Could you call me next Friday at 9am to remind me to pick up the cake?
+Agent: That sounds wonderful Arthur! I will make sure you have that reminder call set for 9 AM next Friday.
+Caller: Also, my email is arthur.pendelton@example.com if you want to email me the recipe we talked about.
+Agent: Got it, I have your email noted down.
+Caller: Thanks so much, talk to you later!
+Agent: Take care Arthur, goodbye!
