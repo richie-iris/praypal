@@ -8,7 +8,7 @@
 # uv gets its own FROM line rather than an inline `COPY --from=<image>`:
 # Dependabot's docker ecosystem only reads FROM, so an inline pin is one it
 # would never bump.
-FROM ghcr.io/astral-sh/uv:0.12.8 AS uv
+FROM ghcr.io/astral-sh/uv:0.12.10 AS uv
 
 # ---- Stage 1: build the venv ----
 FROM python:3.11.16-slim AS builder
