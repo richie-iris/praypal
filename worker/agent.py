@@ -833,7 +833,8 @@ _GREET_KNOWN: tuple[str, ...] = (
 
 
 def _greeting_text(display_name: str | None, alias: str | None, call_count: int = 1,
-                   seed: int = 0, pick: int | None = None, guide_key: str | None = None) -> str:
+                   seed: int = 0, pick: int | None = None, guide_key: str | None = None,
+                   caller_info: dict | None = None) -> str:
     """Short, warm, and final — the clip cannot be interrupted, so every word costs.
 
     TWO INDEPENDENT FACTS decide the opening, and conflating them is what made a
@@ -862,7 +863,7 @@ def _greeting_text(display_name: str | None, alias: str | None, call_count: int 
     if _trial:
         return _trial
 
-    _pray = rt_pray.greeting(guide_key)
+    _pray = rt_pray.greeting(guide_key, caller_info=caller_info)
     if _pray:
         return _pray
 
@@ -4119,11 +4120,11 @@ async def entrypoint(ctx: JobContext) -> None:
         greeting_text = _greeting_text(caller_info.get("display_name"),
                                        caller_info.get("agent_alias"), call_count,
                                        seed=_seed, pick=_pick,
-                                       guide_key=caller_info.get("active_guide"))
+                                       guide_key=caller_info.get("active_guide"),
+                                       caller_info=caller_info)
         state["greeting_enabled"] = os.getenv("RT_GREET", "1").strip().lower() in ("1", "true", "yes")
     if rt_pray.is_pray_lane():
-        _pray_guide = caller_info.get("active_guide") or os.getenv("PRAY_DEFAULT_GUIDE", "atrium")
-        greet_voice = voice_pref or rt_pray.get_guide(_pray_guide).get("voice", "Puck")
+        greet_voice = rt_pray.get_guide("atrium").get("voice", "Puck")
     else:
         greet_voice = voice_pref or os.getenv("GEMINI_LIVE_VOICE", "Aoede")
 

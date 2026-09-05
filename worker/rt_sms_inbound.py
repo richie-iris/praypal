@@ -309,11 +309,18 @@ def handle_incoming(texter_e164: str, our_number: str, body: str,
         reply = process_incoming_sms(texter_e164, body, media_urls, message_sid=message_sid)
         if not reply:
             return
-        res = rt_sms.send_sms(texter_e164, reply, from_number=(our_number or "").strip() or None)
+        media_to_send: str | None = None
+        if isinstance(reply, str):
+            m_match = re.search(r"\[MEDIA:\s*(\S+?)\]", reply)
+            if m_match:
+                media_to_send = m_match.group(1).strip()
+                reply = re.sub(r"\[MEDIA:\s*\S+?\]", "", reply).strip()
+
+        res = rt_sms.send_sms(texter_e164, reply, from_number=(our_number or "").strip() or None, media_url=media_to_send)
         if res.get("error"):
             print(f"[rt-sms-inbound] reply to {_mask(texter_e164)} failed: {res.get('message')}", flush=True)
         else:
-            print(f"[rt-sms-inbound] Replying to {_mask(texter_e164)}: sid={res.get('sid')} chars={len(reply)}",
+            print(f"[rt-sms-inbound] Replying to {_mask(texter_e164)}: sid={res.get('sid')} chars={len(reply)} media={bool(media_to_send)}",
                   flush=True)
     except Exception as exc:
         _obs.caught("rt_sms_inbound.handle_incoming", exc)
