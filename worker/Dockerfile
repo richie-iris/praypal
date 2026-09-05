@@ -11,7 +11,7 @@
 FROM ghcr.io/astral-sh/uv:0.12.8 AS uv
 
 # ---- Stage 1: build the venv ----
-FROM python:3.11.16-slim AS builder
+FROM python:3.14.7-slim AS builder
 RUN apt-get update && apt-get install -y --no-install-recommends build-essential \
     && rm -rf /var/lib/apt/lists/*
 COPY --from=uv /uv /usr/local/bin/uv
@@ -20,7 +20,7 @@ COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev
 
 # ---- Stage 2: runtime ----
-FROM python:3.11.16-slim AS runner
+FROM python:3.14.7-slim AS runner
 WORKDIR /app
 
 # The worker runs as an unprivileged uid, not root. A fixed uid (10001) rather
