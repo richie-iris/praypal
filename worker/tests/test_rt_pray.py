@@ -1,8 +1,8 @@
-"""test_rt_pray.py — Test suite for PrayPal agent seam, crisis shield, and pantheon."""
+"""test_rt_pray.py — Test suite for PrayPal agent seam, crisis shield, pantheon, and isolated memory."""
 from __future__ import annotations
 
 import os
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import rt_pray
 
@@ -103,3 +103,134 @@ def test_forbidden_tools_and_greeting():
         prompt, name = agent._build_instructions()
         assert name == "the seeker"
         assert "PrayPal" in prompt
+
+
+def test_pray_db_rpcs():
+    with patch.object(rt_pray, "_rpc") as mock_rpc:
+        mock_rpc.return_value = {"caller": {"display_name": "Mary"}, "memories": [], "intentions": []}
+        bundle = rt_pray.get_bundle("hash123")
+        assert bundle["caller"]["display_name"] == "Mary"
+        mock_rpc.assert_called_with("rt_pray_get_bundle", {"p_hash": "hash123"})
+
+        mock_rpc.return_value = {"phone_hash": "hash123"}
+        caller = rt_pray.get_caller("hash123")
+        assert caller["phone_hash"] == "hash123"
+
+        mock_rpc.return_value = {"phone_hash": "hash123", "active_guide": "jesus"}
+        upserted = rt_pray.upsert_caller("hash123", display_name="John", active_guide="jesus")
+        assert upserted["active_guide"] == "jesus"
+
+        mock_rpc.return_value = 42
+        mem_id = rt_pray.add_memory("hash123", "loved_one", "Pray for sister", subject="Sister")
+        assert mem_id == 42
+
+        mock_rpc.return_value = 101
+        int_id = rt_pray.add_intention("hash123", "Guidance on new career", tradition="christian")
+        assert int_id == 101
+
+        mock_rpc.return_value = True
+        assert rt_pray.forget_caller("hash123") is True
+
+
+def test_build_system_prompt_with_memory():
+    caller_info = {
+        "display_name": "Samuel",
+        "preferred_name_for_god": "Father",
+    }
+    memories = [
+        {"category": "loved_one", "subject_name": "Hannah", "content": "Praying for Hannah's recovery"},
+        {"category": "confession", "subject_name": None, "content": "Struggled with anger at work"},
+    ]
+    intentions = [
+        {"intention_text": "Peace in the home", "is_answered": False},
+        {"intention_text": "Safe journey to Jerusalem", "is_answered": True},
+    ]
+
+    prompt = rt_pray.build_system_prompt(
+        guide_key="jesus",
+        caller_tradition="christian",
+        caller_info=caller_info,
+        memories=memories,
+        intentions=intentions,
+    )
+
+    assert "Samuel" in prompt
+    assert "Father" in prompt
+    assert "Hannah's recovery" in prompt
+    assert "Struggled with anger" in prompt
+    assert "Peace in the home" in prompt
+    assert "[ANSWERED]" in prompt
+    assert "The Good Shepherd" in prompt
+
+
+def test_build_sms_prompt():
+    prompt = rt_pray.build_sms_prompt(
+        guide_key="shiva",
+        tradition="hindu",
+        caller_name="Arjun",
+        memories=[{"content": "Seeking courage"}],
+        intentions=[{"intention_text": "Strength in meditation"}],
+        thread_context="Arjun: Om Namah Shivaya",
+    )
+    assert "PrayPal" in prompt
+    assert "Arjun" in prompt
+    assert "Lord Shiva" in prompt
+    assert "hindu" in prompt
+    assert "Seeking courage" in prompt
+    assert "Strength in meditation" in prompt
+
+
+def test_process_pray_postcall():
+    transcript = """
+Agent: Peace be with you. What is on your heart today?
+Caller: My name is David. I've been feeling so burdened with guilt about my brother Aaron. Please pray that we reconcile.
+Agent: Peace be upon you David. Forgiveness is always at hand.
+"""
+    mock_extracted = {
+        "caller_name": "David",
+        "active_guide": "god",
+        "spiritual_tradition": "jewish",
+        "preferred_name_for_god": "Hashem",
+        "memories": [
+            {"category": "confession", "subject": "brother Aaron", "content": "Guilt about dispute with Aaron", "vocab": "reconciliation"},
+            {"category": "loved_one", "subject": "Aaron", "content": "Brother Aaron", "vocab": None},
+        ],
+        "intentions": [
+            {"text": "Reconcile with brother Aaron", "tradition": "jewish", "circle": False}
+        ]
+    }
+
+    with patch.dict(os.environ, {"GOOGLE_API_KEY": "test_key"}), \
+         patch.object(rt_pray, "_call_gemini_json", return_value=mock_extracted), \
+         patch.object(rt_pray, "upsert_caller") as mock_upsert, \
+         patch.object(rt_pray, "add_memory") as mock_add_mem, \
+         patch.object(rt_pray, "add_intention") as mock_add_int:
+
+        result = rt_pray.process_pray_postcall("hash_david", transcript)
+
+        assert result["status"] == "ok"
+        assert result["caller_name"] == "David"
+        assert result["memories_saved"] == 2
+        assert result["intentions_saved"] == 1
+
+        mock_upsert.assert_called_once_with(
+            phone_hash="hash_david",
+            display_name="David",
+            active_guide="god",
+            tradition="jewish",
+            name_for_god="Hashem",
+        )
+        assert mock_add_mem.call_count == 2
+        assert mock_add_int.call_count == 1
+
+
+def test_postcall_diversion_to_pray():
+    import rt_postcall_worker
+
+    transcript = "Caller: Hello\nAgent: Peace be with you."
+    with patch.dict(os.environ, {"AGENT_NAME": "pray-pal"}), \
+         patch.object(rt_pray, "process_pray_postcall", return_value={"status": "ok", "diverted": True}) as mock_pray_postcall:
+
+        res = rt_postcall_worker.process_post_call_transcript("+18005550199", transcript)
+        assert res.get("diverted") is True
+        mock_pray_postcall.assert_called_once()

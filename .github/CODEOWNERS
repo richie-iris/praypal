@@ -1,0 +1,3 @@
+# Default owner for everything in the repo. Every PR needs a review from
+# the platform owner before merge (branch protection enforces this).
+* @richie-iris

@@ -1,0 +1,71 @@
+# study-config.yaml — the values kb/ refuses to invent.
+#
+# kb/30-reference/contacts-and-routing.md is explicit: no phone number, address,
+# name, or URL is ever constructed, guessed, recalled, or inferred by the agent.
+# Every one reaches it through this file, and scripts/kb_load.py refuses to
+# publish a build in which any {{TOKEN}} survives unsubstituted.
+#
+# ─────────────────────────────────────────────────────────────────────────────
+# THIS FILE IS DEMO CONFIGURATION. IT IS NOT A LIVE STUDY.
+#
+# APOLLO (NCT01960348) completed in August 2017. kb/10-study/ is a worked
+# example on real protocol text, and kb/10-study/study-identity.md carries the
+# gate that stops the agent telling anyone the trial is open.
+#
+# Every routing value below is a DESCRIPTION of a destination, not a number,
+# and that is deliberate. A plausible-looking phone number in a demo is the one
+# mistake here that could actually hurt someone: it survives a copy-paste into
+# a real lane and a participant dials it during a medical problem. If you want
+# a number in these slots, put a real one that a real person answers, or leave
+# the description.
+#
+# The two exceptions are EMERGENCY_NUMBER and CRISIS_LINE. Those are real,
+# because the one moment the agent must be concretely useful is the moment
+# someone cannot breathe. They are set for the United States below; this study
+# ran in 21 countries and kb/30-reference/contacts-and-routing.md is explicit
+# that both are resolved per participant and never assumed. A lane serving more
+# than one country needs per-participant resolution, which this flat file does
+# not do — see the note at the bottom.
+# ─────────────────────────────────────────────────────────────────────────────
+
+study: NCT01960348
+
+tokens:
+  # ── Site identity ──────────────────────────────────────────────────────────
+  SITE_NAME: "the research site"
+  SITE_ADDRESS: "the study visit address your team gave you"
+
+  # ── Routing destinations. Descriptions, not numbers. See the header. ───────
+  SITE_COORDINATOR: "the study coordinator"
+  SITE_COORDINATOR_NAME: "your study coordinator"
+  SITE_URGENT_LINE: "the site's urgent clinical line"
+  PI_CONTACT: "the Principal Investigator"
+  SAFETY_MAILBOX: "the safety and pharmacovigilance team"
+  QUALITY_MAILBOX: "the quality team"
+  PRIVACY_MAILBOX: "the data protection team"
+  PLATFORM_OWNER: "the platform owner"
+
+  # ── Real, because an emergency is not the place for a placeholder ──────────
+  # United States. Replace per country before any lane outside the US.
+  EMERGENCY_NUMBER: "911"
+  CRISIS_LINE: "988, the Suicide and Crisis Lifeline"
+
+  # ── Conversation ───────────────────────────────────────────────────────────
+  # PARTICIPANT_NAME is substituted at LOAD time here, which is wrong for a real
+  # lane: the name belongs to the person on the call, not to the document. The
+  # opening playbook is the only place it appears, and the runtime should fill
+  # it per call from the caller record. Until it does, this neutral form keeps
+  # the agent from addressing everyone by one name.
+  PARTICIPANT_NAME: "there"
+  FOLLOWUP_WINDOW: "within one business day"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# KNOWN GAPS, written down so they are decisions rather than oversights:
+#
+#   1. One config, one country. EMERGENCY_NUMBER and CRISIS_LINE are flat
+#      values. A multi-country lane must resolve them per participant.
+#   2. PARTICIPANT_NAME is baked in at load time, not per call.
+#   3. The routing destinations are descriptions. The agent can tell a
+#      participant WHO will follow up, but cannot yet give them a number to
+#      dial. For a live lane, that is the first thing to fill in.
+# ─────────────────────────────────────────────────────────────────────────────

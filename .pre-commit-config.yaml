@@ -1,0 +1,36 @@
+# See https://pre-commit.com for more information
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: ['--maxkb=1000']
+      - id: detect-private-key
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.16.5
+    hooks:
+      - id: ruff
+        # Same rule set as CI (worker/pyproject.toml); --fix only applies safe
+        # fixes and fails the hook so the fix gets reviewed, not silently staged.
+        args: [--fix, --exit-non-zero-on-fix]
+      - id: ruff-format
+        # Opt-in until the legacy tree is formatted in a dedicated change: the CI
+        # ruff config allows the compact style (E702/E731) that the formatter
+        # would rewrite across ~70 files.  Run: pre-commit run --hook-stage manual ruff-format
+        stages: [manual]
+
+  # Secret & Credential Scanning
+  - repo: local
+    hooks:
+      - id: forbid-secrets
+        name: Scan for Hardcoded API Secrets
+        entry: (?i)(ey[a-zA-Z0-9_-]{20,}\.[a-zA-Z0-9_-]{20,}\.[a-zA-Z0-9_-]{20,}|KEY[a-zA-Z0-9]{32,}|sk-[a-zA-Z0-9]{32,}|AIza[0-9A-Za-z-_]{35}|sbp_[a-zA-Z0-9]{30,})
+        language: pygrep
+        types: [text]
+        exclude: ^(\.env\.example|\.env\..*\.example|uv\.lock)$

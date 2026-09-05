@@ -213,6 +213,13 @@ def process_incoming_sms(from_number: str, body: str, media_urls: list[str] | No
           f"chars={len(clean_body)} media={len(media)}", flush=True)
     rt_sms.record_sms(from_e164, "inbound", logged_text, media, sid=message_sid)
 
+    import rt_pray
+    if rt_pray.is_pray_lane():
+        is_crisis, crisis_reply = rt_pray.check_crisis(clean_body)
+        if is_crisis and crisis_reply:
+            print(f"[rt-sms-inbound] PrayPal 988 crisis intercept triggered for {_mask(from_e164)}", flush=True)
+            return crisis_reply
+
     import rt_capabilities
     if not rt_capabilities.enabled("send_sms"):
         # Same law as the send_sms tool: no reply is promised that cannot arrive.
@@ -247,25 +254,48 @@ def process_incoming_sms(from_number: str, body: str, media_urls: list[str] | No
         if got:
             media_parts.append(got)
 
-    system_prompt = (
-        f"You are {agent_alias}, texting back your close friend {display_name} on their mobile phone.\n"
-        f"Context on {display_name}: {context_str}\n\n"
-        f"RECENT CHAT THREAD:\n{thread_context}\n\n"
-        f"TEXTING STYLE RULES (CRITICAL - DO NOT VIOLATE):\n"
-        f"1. LENGTH: 1 short sentence or phrase only. Maximum 120 characters. Real people text in quick, punchy bursts.\n"
-        f"2. TONE: Warm, casual, authentic friend texting on an iPhone. Relaxed, punchy, and modern ('haha', 'yup', 'got it!').\n"
-        f"3. ZERO FOOTERS / NO ROBOTIC SIGN-OFFS: NEVER say 'I am Iris...', NEVER say 'Always here if you want to chat or call', NEVER say 'How can I assist you?'. Real friends NEVER add signatures or customer support closings.\n"
-        f"4. SEARCH & LIVE FACTS: Google Search is enabled. When asked about stocks, live events, or links, answer with current real-world facts.\n"
-        f"5. PHOTOS & IMAGES: If an image is attached or recently discussed, look at it directly and describe what is actually in the picture with 100% accuracy (clothing colors, bike, whether a helmet is worn, etc.). Never make up clothing or details.\n"
-        f"6. NO ESSAYS: This is SMS text messaging, NOT a phone conversation or an email."
-    )
+    if rt_pray.is_pray_lane():
+        h_hash = rt_prefs.phone_hash(from_e164)
+        bundle = rt_pray.get_bundle(h_hash) if h_hash else {}
+        caller_info = bundle.get("caller") or {}
+        guide_key = caller_info.get("active_guide") or os.getenv("PRAY_DEFAULT_GUIDE", "god")
+        tradition = caller_info.get("spiritual_tradition") or "universal"
+        caller_name = caller_info.get("display_name") or "Friend"
+        memories = bundle.get("memories") or []
+        intentions = bundle.get("intentions") or []
+
+        system_prompt = rt_pray.build_sms_prompt(
+            guide_key=guide_key,
+            tradition=tradition,
+            caller_name=caller_name,
+            memories=memories,
+            intentions=intentions,
+            thread_context=thread_context,
+        )
+    else:
+        system_prompt = (
+            f"You are {agent_alias}, texting back your close friend {display_name} on their mobile phone.\n"
+            f"Context on {display_name}: {context_str}\n\n"
+            f"RECENT CHAT THREAD:\n{thread_context}\n\n"
+            f"TEXTING STYLE RULES (CRITICAL - DO NOT VIOLATE):\n"
+            f"1. LENGTH: 1 short sentence or phrase only. Maximum 120 characters. Real people text in quick, punchy bursts.\n"
+            f"2. TONE: Warm, casual, authentic friend texting on an iPhone. Relaxed, punchy, and modern ('haha', 'yup', 'got it!').\n"
+            f"3. ZERO FOOTERS / NO ROBOTIC SIGN-OFFS: NEVER say 'I am Iris...', NEVER say 'Always here if you want to chat or call', NEVER say 'How can I assist you?'. Real friends NEVER add signatures or customer support closings.\n"
+            f"4. SEARCH & LIVE FACTS: Google Search is enabled. When asked about stocks, live events, or links, answer with current real-world facts.\n"
+            f"5. PHOTOS & IMAGES: If an image is attached or recently discussed, look at it directly and describe what is actually in the picture with 100% accuracy (clothing colors, bike, whether a helmet is worn, etc.). Never make up clothing or details.\n"
+            f"6. NO ESSAYS: This is SMS text messaging, NOT a phone conversation or an email."
+        )
 
     try:
         reply = _generate_sms_reply(api_key, system_prompt, clean_body or "(sent a photo)", media_parts)
+        if rt_pray.is_pray_lane() and not reply:
+            return "Peace be with you. Your prayer is held close to heart."
         return reply or f"Got your text, {display_name}! Good to hear from you."
     except Exception as exc:
         print(f"[rt-sms-inbound] Error generating SMS reply: {type(exc).__name__}", flush=True)
         _obs.caught("rt_sms_inbound.process_incoming_sms", exc)
+        if rt_pray.is_pray_lane():
+            return "Peace be with you. I am holding your prayer close to heart."
         return f"Hey {display_name}! Got your message — looking forward to our next phone chat soon."
 
 

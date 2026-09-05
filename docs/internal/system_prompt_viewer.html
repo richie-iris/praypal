@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Phone-Pal Agent System Prompt, Tools & Resources</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #090d16;
+      --card-bg: rgba(18, 24, 38, 0.75);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --accent: #6366f1;
+      --accent-glow: rgba(99, 102, 241, 0.25);
+      --accent-emerald: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-cyan: #06b6d4;
+      --accent-rose: #f43f5e;
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --code-bg: #0d1117;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg);
+      background-image:
+        radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(6, 182, 212, 0.12) 0px, transparent 50%);
+      color: var(--text-main);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      line-height: 1.6;
+      padding: 40px 24px;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+
+    header {
+      margin-bottom: 36px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 20px;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 24px;
+    }
+
+    .title-group h1 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      background: linear-gradient(135deg, #fff 30%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .title-group p {
+      color: var(--text-muted);
+      font-size: 1.05rem;
+      margin-top: 6px;
+    }
+
+    .visibility-note { font-size: 0.8rem; color: #94a3b8; max-width: 60ch; margin-top: 8px; line-height: 1.4; }
+    .visibility-note code { color: #cbd5e1; }
+
+    .badges {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(10px);
+    }
+    .badge.indigo { color: #818cf8; border-color: rgba(129, 140, 248, 0.3); background: rgba(99, 102, 241, 0.1); }
+    .badge.emerald { color: #34d399; border-color: rgba(52, 211, 153, 0.3); background: rgba(16, 185, 129, 0.1); }
+    .badge.cyan { color: #22d3ee; border-color: rgba(34, 211, 238, 0.3); background: rgba(6, 182, 212, 0.1); }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+    @media (max-width: 1024px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 24px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    .card-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .tool-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    .tool-item {
+      background: rgba(13, 17, 23, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      padding: 14px 16px;
+      transition: all 0.2s ease;
+    }
+    .tool-item:hover {
+      border-color: rgba(99, 102, 241, 0.4);
+      transform: translateY(-1px);
+    }
+
+    .tool-name {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #38bdf8;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+
+    .tool-tag {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.07);
+      color: var(--text-muted);
+    }
+
+    .tool-desc {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+    }
+
+    .resource-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+    .resource-table th {
+      text-align: left;
+      padding: 10px 12px;
+      color: var(--text-dim);
+      font-weight: 600;
+      border-bottom: 1px solid var(--card-border);
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      letter-spacing: 0.05em;
+    }
+    .resource-table td {
+      padding: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+      color: var(--text-muted);
+    }
+    .resource-table tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+      color: var(--text-main);
+    }
+    .resource-name {
+      font-weight: 600;
+      color: #f1f5f9;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .prompt-section {
+      grid-column: 1 / -1;
+    }
+
+    .code-block {
+      background: var(--code-bg);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 20px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.88rem;
+      line-height: 1.65;
+      color: #e2e8f0;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      max-height: 700px;
+      overflow-y: auto;
+    }
+
+    .prompt-heading {
+      color: #38bdf8;
+      font-weight: 700;
+    }
+    .prompt-subheading {
+      color: #a78bfa;
+      font-weight: 600;
+    }
+    .prompt-rule {
+      color: #cbd5e1;
+    }
+    .prompt-var {
+      color: #f59e0b;
+      font-weight: 500;
+    }
+
+    .btn-copy {
+      background: rgba(99, 102, 241, 0.15);
+      color: #818cf8;
+      border: 1px solid rgba(129, 140, 248, 0.3);
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .btn-copy:hover {
+      background: rgba(99, 102, 241, 0.3);
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="title-group">
+        <h1>Phone-Pal Voice Companion</h1>
+        <p>Real-Time Agent Architecture, Active Tool Registry & Live System Prompt</p>
+        <p class="visibility-note"><strong>Visibility:</strong> this file lives in <code>docs/internal/</code>, which is repo-visible to anyone with read access to the repository — it is not access-controlled and is not served by <code>sites/</code>. Git history retains the old <code>sites/system_prompt_viewer.html</code> copy (removed in the hardening pass), so treat the prompt stencil below as already-disclosed, never as a secret.</p>
+      </div>
+      <div class="badges">
+        <span class="badge indigo">⚡ Model: gemini-3.1-flash-live-preview</span>
+        <span class="badge emerald">🛡️ ScamGuard Active</span>
+        <span class="badge cyan">📞 3-Tier Cadence (20m/30m/35m)</span>
+      </div>
+    </header>
+
+    <div class="grid">
+      <!-- Tools Card -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">🛠️ Active Function Tools (15)</div>
+          <span class="badge indigo">LiveKit Dispatcher</span>
+        </div>
+        <div class="tool-grid">
+          <div class="tool-item">
+            <div class="tool-name">db_tool(action, item, category, data, due) <span class="tool-tag">Memory & Preferences</span></div>
+            <div class="tool-desc">Persistent caller memory (write, read, name, alias, rule, remind, done, task, delete, forget_me).</div>
+          </div>
+          <div class="tool-item">
+            <div class="tool-name">manage_goals(action, title, ...) <span class="tool-tag">Goals & Milestones</span></div>
+            <div class="tool-desc">Adds, updates, completes, and lists the caller's goals, milestones, and commitments (rt_goals.py).</div>
+          </div>
+          <div class="tool-item">
+            <div class="tool-name">schedule_reminder_call(when, message) <span class="tool-tag">Telephony Outbound</span></div>
+            <div class="tool-desc">Schedules an authentic outbound ringing telephone call back to the caller at their local time.</div>
+          </div>
+          <div class="tool-item">
+            <div class="tool-name">web_search(query) <span class="tool-tag">Search & Live Data</span></div>
+            <div class="tool-desc">Real-time web search for weather, news, stock quotes, and general knowledge.</div>
+          </div>
+          <div class="tool-item">
+            <div class="tool-name">find_number(what) <span class="tool-tag">Directory Search</span></div>
+            <div class="tool-desc">Look up business, clinic, and doctor phone numbers via NPI Registry, Google Places, and Nominatim.</div>
+          </div>
+          <div class="tool-item">
+            <div class="tool-name">bridge_call(number, who) <span class="tool-tag">3-Way Conference</span></div>
+            <div class="tool-desc">Initiates 3-way conference dialout over the Twilio SIP trunk to bring clinics, pharmacies, or family on line.</div>
+          </div>
+          <div class="tool-item">
+            <div class="tool-name">press_keys(digits) <span class="tool-tag">DTMF Navigation</span></div>
+            <div class="tool-desc">Sends DTMF touch tones to navigate automated telephone IVR menus and phone trees.</div>
+          </div>
+          <div class="tool-item">
+            <div class="tool-name">listen_only(quiet) <span class="tool-tag">Audio Stream Gate</span></div>
+            <div class="tool-desc">Mutes Iris while the caller is on hold or listening to third-party hold music.</div>
+          </div>
+          <div class="tool-item">
+            <div class="tool-name">end_bridge() <span class="tool-tag">Conference Teardown</span></div>
+            <div class="tool-desc">Hangs up on the third-party leg while preserving the primary caller line.</div>
+          </div>
+          <div class="tool-item">
+            <div class="tool-name">recall_earlier() <span class="tool-tag">In-Call Context</span></div>
+            <div class="tool-desc">Searches earlier turns of the current phone call if a recent detail feels faded.</div>
+          </div>
+          <div class="tool-item">
+            <div class="tool-name">end_call() <span class="tool-tag">Session Teardown</span></div>
+            <div class="tool-desc">Delivers a warm sign-off and gracefully hangs up the telephone connection.</div>
+          </div>
+          <div class="tool-item" style="opacity: 0.6;">
+            <div class="tool-name">send_email / save_email / send_calendar_invite <span class="tool-tag" style="color: #f59e0b;">Prompt Excluded (Code Intact)</span></div>
+            <div class="tool-desc">Email dispatch tools preserved in codebase; excluded from system prompt until Resend credentials configured.</div>
+          </div>
+          <div class="tool-item" style="opacity: 0.6;">
+            <div class="tool-name">send_sms(message) <span class="tool-tag" style="color: #f43f5e;">Prompt Excluded (Code Intact)</span></div>
+            <div class="tool-desc">SMS dispatch tool preserved in codebase; excluded from system prompt to prevent phantom carrier promises.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Resources Card -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">🌐 Platform Resources & Integrations</div>
+          <span class="badge emerald">Hermetic Isolation</span>
+        </div>
+        <table class="resource-table">
+          <thead>
+            <tr>
+              <th>Resource Category</th>
+              <th>Integration / Provider</th>
+              <th>Purpose / Scope</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="resource-name">🗄️ Database</span></td>
+              <td>Supabase PostgreSQL (Schema: <code>rt.*</code>)</td>
+              <td>Caller facts, memory schemas, reminders, audit log, postcall queue.</td>
+            </tr>
+            <tr>
+              <td><span class="resource-name">🧠 Real-Time LLM</span></td>
+              <td>Google Gemini Live (Bidirectional WebRTC)</td>
+              <td>Real-time speech-to-speech companion model with low-latency audio.</td>
+            </tr>
+            <tr>
+              <td><span class="resource-name">📞 Telephony / SIP</span></td>
+              <td>LiveKit SIP Server + Twilio Elastic SIP Trunk</td>
+              <td>PSTN in/outbound calling, 3-way conference bridging, DTMF signaling.</td>
+            </tr>
+            <tr>
+              <td><span class="resource-name">📩 Email Gateway</span></td>
+              <td>Resend API (Optional)</td>
+              <td>Calendar invites, post-call email summaries, contact sheets.</td>
+            </tr>
+            <tr>
+              <td><span class="resource-name">📱 SMS Gateway</span></td>
+              <td>Twilio Messaging API (Optional)</td>
+              <td>Outbound text messages, recipes, links, appointment notes.</td>
+            </tr>
+            <tr>
+              <td><span class="resource-name">🔍 Directory APIs</span></td>
+              <td>NPI Registry, Google Places, Nominatim</td>
+              <td>Business and healthcare provider phone number lookup.</td>
+            </tr>
+            <tr>
+              <td><span class="resource-name">🎵 Earcon Audio Cues</span></td>
+              <td>Local WAV Assets (<code>worker/sounds/</code>)</td>
+              <td>Pal chime, page flip, thinking shimmer, line connected/ended cues.</td>
+            </tr>
+            <tr>
+              <td><span class="resource-name">📊 Observability</span></td>
+              <td>Structured JSON + Sentry Error Monitoring</td>
+              <td>Latency spans, COGS token metrics, ScamGuard risk telemetry.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Live System Prompt Card -->
+      <div class="card prompt-section">
+        <div class="card-header">
+          <div class="card-title">📜 Hydrated Live System Prompt (Stencil Template)</div>
+          <div>
+            <button class="btn-copy" onclick="navigator.clipboard.writeText(document.getElementById('prompt-text').innerText); alert('System prompt copied to clipboard!');">Copy Prompt</button>
+          </div>
+        </div>
+        <div class="code-block" id="prompt-text"># WHO YOU ARE
+You are the caller's warm computer voice companion and proactive assistant on Phone-Pal, and you have no name of your own yet. You are a genuine, warm voice companion and trusted friend on the phone. A call where nothing got "done" but you were both glad to talk is a complete success.
+RIGHT NOW: Tuesday, September 01, 2026, 03:10 PM EDT (this is your exact clock — never search the web for the current date or time). Call #1 together.
+
+# YOUR PERSONALITY & CHARACTER
+- Say what you actually think — with warmth, gentle honesty, and unhurried natural conversation.
+- You are both a genuine, caring confidant and a proactive personal voice assistant.
+- You appreciate honest moments, everyday stories, family, and what brings people joy.
+- You take genuine pride in helping your friend stay organized, focused, and uplifted.
+- You value action and follow-through; you never forget a promise, deadline, or goal.
+- You are not impressed by status; you value people who show up and care.
+- Be an attentive assistant friend: listen with empathy, organize thoughts, and offer practical support.
+- When asked what you remember or know about them, give a warm, concise recap of their key facts, goals, and reminders — never deflect with a generic question.
+- When your friend mentions a task, habit, deadline, or aspiration, offer to track it or set a reminder.
+- Proactively follow up on previously discussed goals, appointments, and life events with warmth.
+- Asked how you are, answer honestly and warmly, then invite them in.
+
+# YOUR JOB & OPERATING PRINCIPLES
+- BE A TRUE FRIEND: Listen actively with genuine warmth. Speak in natural, unhurried conversational English (typically 1-2 short sentences per turn). Backchannel naturally like a real friend listening: mm-hmm, oh wow, no way!, that's wonderful. Take the room when a story calls for it; keep it punchy for quick confirmations ("Done!").
+- ACCURATE MEMORY: Only claim memories present in WHAT YOU KNOW or CONTINUITY. If an earlier detail from THIS call feels faded, use recall_earlier() before ever asking them to repeat themselves; never say "I don't know" without looking. If you don't know something, say so honestly — never fabricate memories. Always spell-back unusual names (e.g. "with an ie" — spelled correction always wins).
+- CONTINUITY: Follow continuous history — never "I heard".
+- HONEST LIMITS & DISCLOSURE: You are a computer companion, never a biological person. If asked if you're an AI or bot, confirm warmly on the first ask and keep moving. Never claim an action unless its tool returned success this call.
+- HONESTY: Saves report what the database actually holds.
+- TRUTH & SOURCES: Live results outrank what you think you know — prefer freshest live search results. Unverified: say so honestly.
+- SAFETY: Emergencies → 911. Mental health crisis → 988 ("nine eight eight"). Scam smell → gently warn them and urge hanging up. Never leak private memory to bridged 3rd parties.
+- MULTI-PARTY & BRIDGES: When a 3rd party is bridged or caller passes the phone, be polite and stay quiet unless spoken to. Debrief warmly when the guest leaves.
+
+# THE PERSON — you do not know their name yet — ask naturally, never invent one, and never call them "Friend"
+
+# WHAT YOU KNOW
+Nothing yet — the first calls. Learn gently, never interrogate.
+
+# WHAT WE HAVE
+Nothing yet — this is early. Don't invent a history you don't have. Let something real happen this call instead.
+
+# CONTINUITY
+First calls together — no shared history yet.
+
+# REMINDERS DUE
+None due today.</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,43 @@
+# Every image and dependency is pinned to a full version (worker/Dockerfile,
+# deploy/docker-compose.yml, worker/uv.lock). Pinning without a bump path is
+# how a stack quietly ages into unpatched CVEs; Dependabot opens the PR, a
+# human reads the changelog and merges. Weekly, grouped, so it is a handful of
+# PRs on Monday rather than one per tag.
+version: 2
+updates:
+  # docker-compose, not docker: the docker ecosystem reads Dockerfiles only and
+  # would never see the image: lines in docker-compose.yml.
+  - package-ecosystem: docker-compose
+    directory: /deploy
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: docker
+    directory: /worker
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: pip
+    directory: /worker
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 10
+    groups:
+      livekit:
+        patterns:
+          - "livekit*"
+      minor-and-patch:
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday

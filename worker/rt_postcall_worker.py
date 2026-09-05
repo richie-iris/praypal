@@ -1217,6 +1217,12 @@ def process_post_call_transcript(caller_e164: str | None, transcript: str,
 
     rt_prefs.ACTOR = "postcall"
     print(f"[rt-postcall] processing for caller={_mask(caller_e164)} ({len(transcript)} chars)", flush=True)
+
+    import rt_pray
+    if rt_pray.is_pray_lane():
+        print(f"[rt-pray] diverting postcall to sacred processor for caller={_mask(caller_e164)}", flush=True)
+        return rt_pray.process_pray_postcall(h_hash, transcript, caller_e164=caller_e164, call_id=call_id)
+
     with contextlib.suppress(Exception):
         rt_obs.obs.event("postcall.queue_lag", job_id=call_id or "postcall", lag_ms=0.0)
         rt_obs.obs.event("postcall.started", call_id=call_id, job_id=call_id,

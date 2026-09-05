@@ -524,6 +524,20 @@ def prewarm(proc) -> None:
     """
     def _render() -> None:
         try:
+            if rt_trial.is_trial_lane():
+                v = os.getenv("GEMINI_LIVE_VOICE", "Aoede")
+                _tg = rt_trial.greeting()
+                if _tg:
+                    _clip_wav(v, _tg, _GREET_TAG)
+                return
+            if rt_pray.is_pray_lane():
+                for g in rt_pray.GUIDES.values():
+                    _gv = g.get("voice", "Alnilam")
+                    _gt = g.get("greeting")
+                    if _gt:
+                        _clip_wav(_gv, _gt, _GREET_TAG)
+                return
+
             v = os.getenv("GEMINI_LIVE_VOICE", "Aoede")
             # Every clip any caller can hear. All three pools are name-free, so
             # this is the whole greeting surface and it is rendered once.
@@ -671,11 +685,21 @@ def _build_instructions(caller_e164: str | None = None, call_count: int = 0, pre
         return _prompt, "the participant"
 
     if rt_pray.is_pray_lane():
-        _guide_key = os.getenv("PRAY_DEFAULT_GUIDE", "god")
-        _prompt = rt_pray.build_system_prompt(_guide_key)
+        bundle = prefetch_bundle or {}
+        caller_info = bundle.get("caller") or {}
+        _guide_key = caller_info.get("active_guide") or os.getenv("PRAY_DEFAULT_GUIDE", "god")
+        _tradition = caller_info.get("spiritual_tradition") or "universal"
+        _prompt = rt_pray.build_system_prompt(
+            guide_key=_guide_key,
+            caller_tradition=_tradition,
+            caller_info=caller_info,
+            memories=bundle.get("memories") or [],
+            intentions=bundle.get("intentions") or [],
+        )
+        resolved_name = caller_info.get("display_name") or "the seeker"
         print(f"[rt-pray] sacred prompt {len(_prompt)} chars for "
-              f"guide={_guide_key} agent={rt_pray.agent_name()}", flush=True)
-        return _prompt, "the seeker"
+              f"guide={_guide_key} agent={rt_pray.agent_name()} caller={resolved_name}", flush=True)
+        return _prompt, resolved_name
 
     try:
         import rt_hydrator
@@ -795,7 +819,7 @@ _GREET_KNOWN: tuple[str, ...] = (
 
 
 def _greeting_text(display_name: str | None, alias: str | None, call_count: int = 1,
-                   seed: int = 0, pick: int | None = None) -> str:
+                   seed: int = 0, pick: int | None = None, guide_key: str | None = None) -> str:
     """Short, warm, and final — the clip cannot be interrupted, so every word costs.
 
     TWO INDEPENDENT FACTS decide the opening, and conflating them is what made a
@@ -824,7 +848,7 @@ def _greeting_text(display_name: str | None, alias: str | None, call_count: int 
     if _trial:
         return _trial
 
-    _pray = rt_pray.greeting()
+    _pray = rt_pray.greeting(guide_key)
     if _pray:
         return _pray
 
@@ -3298,16 +3322,26 @@ async def entrypoint(ctx: JobContext) -> None:
     prefetched_bundle: dict = {}
     if caller_e164:
         try:
-            prefetched_bundle = await asyncio.wait_for(
-                asyncio.to_thread(
-                    rt_prefs._req, "POST", "rpc/rt_get_caller_full_bundle",
-                    {"p_hash": rt_prefs.phone_hash(caller_e164)}
-                ), timeout=3.0
-            ) or {}
-            caller_info = prefetched_bundle.get("caller") or {}
-            voice_pref = caller_info.get("voice_pref") or None
-            call_count = int(caller_info.get("call_count") or 0)
-            print(f"[rt] bundle prefetched: name={caller_info.get('display_name')!r} calls={call_count} schemas={len(prefetched_bundle.get('schemas') or [])}", flush=True)
+            if rt_pray.is_pray_lane():
+                h = rt_prefs.phone_hash(caller_e164)
+                prefetched_bundle = await asyncio.wait_for(
+                    asyncio.to_thread(rt_pray.get_bundle, h), timeout=3.0
+                ) or {}
+                caller_info = prefetched_bundle.get("caller") or {}
+                _guide_k = caller_info.get("active_guide") or os.getenv("PRAY_DEFAULT_GUIDE", "god")
+                voice_pref = rt_pray.get_guide(_guide_k).get("voice", "Alnilam")
+                print(f"[rt-pray] bundle prefetched: name={caller_info.get('display_name')!r} guide={_guide_k} voice={voice_pref}", flush=True)
+            else:
+                prefetched_bundle = await asyncio.wait_for(
+                    asyncio.to_thread(
+                        rt_prefs._req, "POST", "rpc/rt_get_caller_full_bundle",
+                        {"p_hash": rt_prefs.phone_hash(caller_e164)}
+                    ), timeout=3.0
+                ) or {}
+                caller_info = prefetched_bundle.get("caller") or {}
+                voice_pref = caller_info.get("voice_pref") or None
+                call_count = int(caller_info.get("call_count") or 0)
+                print(f"[rt] bundle prefetched: name={caller_info.get('display_name')!r} calls={call_count} schemas={len(prefetched_bundle.get('schemas') or [])}", flush=True)
         except Exception as e:
             prefetched_bundle = {"_attempted": True}
             print(f"[rt] caller lookup skipped ({e}) — using default voice", flush=True)
@@ -4014,9 +4048,14 @@ async def entrypoint(ctx: JobContext) -> None:
                     break
         greeting_text = _greeting_text(caller_info.get("display_name"),
                                        caller_info.get("agent_alias"), call_count,
-                                       seed=_seed, pick=_pick)
+                                       seed=_seed, pick=_pick,
+                                       guide_key=caller_info.get("active_guide"))
         state["greeting_enabled"] = os.getenv("RT_GREET", "1").strip().lower() in ("1", "true", "yes")
-    greet_voice = voice_pref or os.getenv("GEMINI_LIVE_VOICE", "Aoede")
+    if rt_pray.is_pray_lane():
+        _pray_guide = caller_info.get("active_guide") or os.getenv("PRAY_DEFAULT_GUIDE", "god")
+        greet_voice = voice_pref or rt_pray.get_guide(_pray_guide).get("voice", "Alnilam")
+    else:
+        greet_voice = voice_pref or os.getenv("GEMINI_LIVE_VOICE", "Aoede")
 
     async def _render_greeting_clip():
         """Render the opening ahead of needing it. Returns a path or None.

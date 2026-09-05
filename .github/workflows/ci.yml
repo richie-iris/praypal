@@ -1,0 +1,74 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v3
+      with:
+        enable-cache: true
+
+    - name: Install dependencies
+      # --frozen installs exactly what worker/uv.lock pins, so the uv cache key
+      # (hashed from the lock) matches what actually lands in the venv.
+      run: |
+        cd worker
+        uv sync --extra dev --frozen
+
+    - name: Run Ruff Lint
+      run: |
+        cd worker
+        uv run --frozen ruff check .
+
+    - name: Run pre-commit hooks
+      # Hook revs are pinned in .pre-commit-config.yaml; pre-commit itself comes from the dev extra.
+      run: |
+        uv run --frozen --project worker pre-commit run --all-files --show-diff-on-failure
+
+    - name: Audit dependencies for known vulnerabilities
+      # Audits the locked third-party set only: the editable project itself has no
+      # advisory record and would make pip-audit --strict fail every run.
+      # Fails on any advisory not listed in .pip-audit-ignore (IDs only, '#' comments allowed).
+      run: |
+        IGNORES=""
+        if [ -f .pip-audit-ignore ]; then
+          while IFS= read -r line || [ -n "$line" ]; do
+            id="$(printf '%s' "$line" | sed 's/#.*//' | tr -d '[:space:]\r')"
+            [ -n "$id" ] && IGNORES="$IGNORES --ignore-vuln $id"
+          done < .pip-audit-ignore
+        fi
+        cd worker
+        uv export --frozen --extra dev --no-emit-project --no-hashes -o /tmp/req.txt
+        uv run --frozen pip-audit --progress-spinner off --strict -r /tmp/req.txt $IGNORES
+
+    - name: Run Pytest Test Suite
+      run: |
+        cd worker
+        uv run --frozen python -m pytest tests -v
+
+    - name: Validate SQL Migrations Syntax & Ordering
+      run: |
+        cd worker
+        uv run --frozen python -m pytest tests/test_migrations.py -v
+
+    - name: Replay harness against recorded fixtures (offline)
+      # Replays worker/harness/replay_fixtures with the invariant detectors; no network or DB.
+      run: |
+        cd worker
+        uv run --frozen python harness/replay_suite.py --fixtures
