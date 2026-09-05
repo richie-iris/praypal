@@ -1,22 +1,30 @@
 /**
  * PRAYPAL — Interactive Sanctuary & Living Altar Application
  * Features:
- *  - Guide Switching & Syncretic Council (Jesus + Shiva)
+ *  - Guide Switching (Atrium, God, Jesus, Shiva, Krishna, Moses, Noah, Mother, Council)
+ *  - Dual Story Filtering (By Spiritual Tradition AND By Life Event Type)
  *  - Live Phonetic Syllable Animation (Sanskrit, Hebrew, Arabic, English)
  *  - Tactile Haptic Japa Mala Counter (Web Vibration API + 108 Bead Completion)
- *  - Zero-Latency Web Audio Synthesizer (Harmonic Sacred Soundscapes)
+ *  - Zero-Latency Web Audio Synthesizer (Harmonic Sacred Soundscapes & Chanting Chime)
  *  - In-Browser Web Voice Session Simulation
  */
 
 // ── 1. SACRED DATA DICTIONARIES ───────────────────────────────────────────
 
 const GUIDES = {
+  atrium: {
+    name: "Sanctuary Atrium Keeper (Universal Host)",
+    icon: "🏛️",
+    motto: '"Welcome to the Sanctuary. Speak your need, and I will connect you with whichever divine voice brings you peace."',
+    theme: "universal",
+    tradition: "english"
+  },
   god: {
     name: "God Almighty (Loving Presence)",
     icon: "🕊️",
-    motto: '"I am with you always, even unto the end of the world."',
+    motto: '"I am with you always, even unto the end of the world. What is on your heart today?"',
     theme: "universal",
-    tradition: "sanskrit"
+    tradition: "english"
   },
   jesus: {
     name: "Jesus of Nazareth (The Good Shepherd)",
@@ -136,11 +144,15 @@ const SCRIPTURES = {
 
 // ── 2. STATE MANAGEMENT ───────────────────────────────────────────────────
 
-let currentGuide = "god";
+let currentGuide = "atrium";
 let currentTradition = "sanskrit";
 let malaBeads = 0;
 let isCalling = false;
 let syllableInterval = null;
+let chantAudioEnabled = false;
+
+let activeStoryTradition = "all";
+let activeStoryEvent = "all";
 
 // ── 3. GUIDE & SCRIPTURE SWITCHING ────────────────────────────────────────
 
@@ -149,22 +161,27 @@ function selectGuide(key) {
   currentGuide = key;
   const guide = GUIDES[key];
 
-  // Update pills UI
-  document.querySelectorAll("#guide-pills .pill").forEach(pill => {
-    pill.classList.remove("active");
+  // Update shelf buttons UI
+  document.querySelectorAll(".guide-btn").forEach(btn => {
+    btn.classList.remove("active");
+    if (btn.getAttribute("onclick")?.includes(`'${key}'`)) {
+      btn.classList.add("active");
+    }
   });
-  const activeBtn = Array.from(document.querySelectorAll("#guide-pills .pill")).find(b => 
-    b.getAttribute("onclick")?.includes(`'${key}'`)
-  );
-  if (activeBtn) activeBtn.classList.add("active");
 
-  // Update Altar
-  document.getElementById("altar-icon").textContent = guide.icon;
-  document.getElementById("altar-name").textContent = guide.name;
-  document.getElementById("altar-motto").textContent = guide.motto;
+  // Update Altar DOM elements
+  const emblem = document.getElementById("altar-emblem");
+  const title = document.getElementById("altar-title");
+  const motto = document.getElementById("altar-motto");
+
+  if (emblem) emblem.textContent = guide.icon;
+  if (title) title.textContent = guide.name;
+  if (motto) motto.textContent = guide.motto;
 
   // Set corresponding scripture tradition
   setScripture(guide.tradition);
+
+  triggerHaptic([15]);
 }
 
 function setScripture(lang) {
@@ -172,35 +189,33 @@ function setScripture(lang) {
   currentTradition = lang;
   const scrip = SCRIPTURES[lang];
 
-  // Update lang buttons
-  document.querySelectorAll(".lang-btn").forEach(btn => {
-    btn.classList.remove("active");
-    if (btn.getAttribute("onclick")?.includes(`'${lang}'`)) {
-      btn.classList.add("active");
-    }
-  });
+  const origEl = document.getElementById("scrip-orig");
+  const meanEl = document.getElementById("scrip-mean");
+  const tagEl = document.querySelector(".scrip-tag");
 
-  document.getElementById("scripture-tradition").textContent = scrip.tag;
-  document.getElementById("scrip-orig").textContent = scrip.original;
-  document.getElementById("scrip-mean").textContent = scrip.meaning;
+  if (tagEl) tagEl.textContent = scrip.tag;
+  if (origEl) origEl.textContent = scrip.original;
+  if (meanEl) meanEl.textContent = scrip.meaning;
 
   // Render phonetic syllables
   const phonContainer = document.getElementById("scrip-phon");
-  phonContainer.innerHTML = "";
-  scrip.phonetic.forEach((item, idx) => {
-    if (item.text === "•") {
-      const sep = document.createElement("span");
-      sep.textContent = " • ";
-      sep.style.color = "var(--text-dim)";
-      phonContainer.appendChild(sep);
-      return;
-    }
-    const span = document.createElement("span");
-    span.className = "syllable" + (idx === 0 ? " highlight" : "");
-    span.textContent = item.text;
-    span.title = item.note || "";
-    phonContainer.appendChild(span);
-  });
+  if (phonContainer) {
+    phonContainer.innerHTML = "";
+    scrip.phonetic.forEach((item, idx) => {
+      if (item.text === "•") {
+        const sep = document.createElement("span");
+        sep.textContent = " • ";
+        sep.style.color = "var(--text-dim)";
+        phonContainer.appendChild(sep);
+        return;
+      }
+      const span = document.createElement("span");
+      span.className = "syllable" + (idx === 0 ? " highlight" : "");
+      span.textContent = item.text;
+      span.title = item.note || "";
+      phonContainer.appendChild(span);
+    });
+  }
 
   startSyllableAnimation();
 }
@@ -215,10 +230,93 @@ function startSyllableAnimation() {
     syllables.forEach(s => s.classList.remove("highlight"));
     activeIdx = (activeIdx + 1) % syllables.length;
     syllables[activeIdx].classList.add("highlight");
+
+    if (chantAudioEnabled) {
+      playChantTone();
+    }
   }, 1600);
 }
 
-// ── 4. TACTILE JAPA MALA & ROSARY (HAPTIC ENGINE) ─────────────────────────
+function toggleChantAudio() {
+  chantAudioEnabled = !chantAudioEnabled;
+  const icon = document.getElementById("chant-icon");
+  if (icon) {
+    icon.textContent = chantAudioEnabled ? "🔊" : "🔈";
+  }
+  if (chantAudioEnabled) {
+    initAudioContext();
+    playChantTone();
+  }
+  triggerHaptic([20]);
+}
+
+function playChantTone() {
+  if (!audioCtx) initAudioContext();
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = "sine";
+  osc.frequency.setValueAtTime(432, audioCtx.currentTime); // 432 Hz healing harmonic
+  gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.8);
+  osc.connect(gain);
+  gain.connect(masterGain);
+  osc.start();
+  osc.stop(audioCtx.currentTime + 0.82);
+}
+
+// ── 4. MULTI-FAITH & EVENT STORY FILTERING ────────────────────────────────
+
+function filterStories(tradition) {
+  if (tradition) activeStoryTradition = tradition;
+
+  // Update tradition buttons
+  document.querySelectorAll(".stories-filters:not(.event-filters) .filter-btn").forEach(btn => {
+    btn.classList.remove("active");
+    if (btn.getAttribute("onclick")?.includes(`'${activeStoryTradition}'`)) {
+      btn.classList.add("active");
+    }
+  });
+
+  applyStoryFilters();
+  triggerHaptic([12]);
+}
+
+function filterStoriesEvent(eventType) {
+  if (eventType) activeStoryEvent = eventType;
+
+  // Update event buttons
+  document.querySelectorAll(".event-filters .filter-btn").forEach(btn => {
+    btn.classList.remove("active");
+    if (btn.getAttribute("onclick")?.includes(`'${activeStoryEvent}'`)) {
+      btn.classList.add("active");
+    }
+  });
+
+  applyStoryFilters();
+  triggerHaptic([12]);
+}
+
+function applyStoryFilters() {
+  const cards = document.querySelectorAll(".story-card");
+  cards.forEach(card => {
+    const cardTrad = card.getAttribute("data-tradition");
+    const cardEvent = card.getAttribute("data-event");
+
+    const matchTrad = (activeStoryTradition === "all" || cardTrad === activeStoryTradition);
+    const matchEvent = (activeStoryEvent === "all" || cardEvent === activeStoryEvent);
+
+    if (matchTrad && matchEvent) {
+      card.style.display = "flex";
+      card.classList.remove("fade-in");
+      void card.offsetWidth; // trigger reflow for animation
+      card.classList.add("fade-in");
+    } else {
+      card.style.display = "none";
+    }
+  });
+}
+
+// ── 5. TACTILE JAPA MALA & ROSARY (HAPTIC ENGINE) ─────────────────────────
 
 function advanceMala() {
   malaBeads = (malaBeads + 1) % 109;
@@ -242,40 +340,39 @@ function resetMala() {
 }
 
 function updateMalaDisplay() {
-  document.getElementById("mala-count").textContent = malaBeads;
-  const pct = Math.min((malaBeads / 108) * 100, 100);
-  document.getElementById("mala-progress").style.width = pct + "%";
+  const countEl = document.getElementById("mala-count");
+  const progEl = document.getElementById("mala-progress");
+  if (countEl) countEl.textContent = malaBeads;
+  if (progEl) progEl.style.width = ((malaBeads / 108) * 100).toFixed(1) + "%";
 }
 
 function triggerHaptic(pattern) {
-  if ("vibrate" in navigator) {
+  if (typeof navigator !== "undefined" && "vibrate" in navigator) {
     try {
       navigator.vibrate(pattern);
-    } catch (e) {
-      // Haptics not allowed without user gesture on some browsers
-    }
+    } catch (e) {}
   }
 }
 
-// Spacebar triggers Mala bead
-window.addEventListener("keydown", (e) => {
+// Global spacebar listener for counting Japa Mala beads
+document.addEventListener("keydown", (e) => {
   if (e.code === "Space" && e.target.tagName !== "INPUT" && e.target.tagName !== "TEXTAREA") {
     e.preventDefault();
     advanceMala();
   }
 });
 
-// ── 5. ZERO-COGS WEB AUDIO SYNTHESIZER ───────────────────────────────────
+// ── 6. ZERO-COGS WEB AUDIO SYNTHESIZER ────────────────────────────────────
 
 let audioCtx = null;
-let masterGain = null;
-let currentOscs = [];
 let currentSound = null;
+let currentOscs = [];
+let masterGain = null;
 
 function initAudioContext() {
   if (!audioCtx) {
-    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-    audioCtx = new AudioContextClass();
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    audioCtx = new AudioContext();
     masterGain = audioCtx.createGain();
     masterGain.gain.setValueAtTime(0.6, audioCtx.currentTime);
     masterGain.connect(audioCtx.destination);
@@ -417,58 +514,51 @@ function playBellLoop() {
 }
 
 function setVolume(val) {
-  document.getElementById("vol-display").textContent = val + "%";
+  const volEl = document.getElementById("vol-display");
+  if (volEl) volEl.textContent = val + "%";
   if (masterGain && audioCtx) {
     masterGain.gain.setValueAtTime(val / 100, audioCtx.currentTime);
   }
 }
 
-// ── 6. IN-BROWSER WEBRTC VOICE SESSION ────────────────────────────────────
+// ── 7. IN-BROWSER WEBRTC VOICE SESSION ────────────────────────────────────
 
-function startWebSession() {
-  const btn = document.getElementById("webrtc-call-btn");
-  const wave = document.getElementById("waveform");
+function startWebVoiceCall() {
+  const btn = document.querySelector(".btn-phone-call");
+  const wave = document.querySelector(".audio-waveform-bars");
 
   if (isCalling) {
     // End session
     isCalling = false;
-    btn.innerHTML = `
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
-      Talk in Browser
-    `;
-    btn.classList.remove("btn-primary");
-    btn.classList.add("btn-secondary");
-    wave.classList.remove("active");
+    if (btn) btn.textContent = "Pick Up Receiver";
+    if (wave) wave.classList.remove("active");
     triggerHaptic([30]);
     return;
   }
 
   // Request microphone & connect
-  navigator.mediaDevices?.getUserMedia({ audio: true })
-    .then(stream => {
-      isCalling = true;
-      btn.innerHTML = `
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg>
-        End Web Sanctuary Session
-      `;
-      btn.classList.remove("btn-secondary");
-      btn.classList.add("btn-primary");
-      wave.classList.add("active");
-      triggerHaptic([50, 50]);
+  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    navigator.mediaDevices.getUserMedia({ audio: true })
+      .then(stream => {
+        isCalling = true;
+        if (btn) btn.textContent = "End Sanctuary Call";
+        if (wave) wave.classList.add("active");
+        triggerHaptic([50, 50]);
 
-      // Automatically play gentle background drone
-      if (!currentSound) playAmbient("flute");
+        if (!currentSound) playAmbient("flute");
 
-      // Voice prompt simulation
-      const guideName = GUIDES[currentGuide].name;
-      alert(`🕊️ Connected to the Sanctuary. You are now speaking with ${guideName}. Speak your heart; God is listening.`);
-    })
-    .catch(err => {
-      alert("Microphone permission was not granted. You can still dial the live line anytime at +1 (973) 606-9515.");
-    });
+        const guideName = GUIDES[currentGuide]?.name || "Sanctuary Atrium";
+        alert(`🕊️ Connected to the Sanctuary. You are now speaking with ${guideName}. Speak freely; the line is open.`);
+      })
+      .catch(err => {
+        alert("Microphone permission was not granted. You can dial the live telephone hotline anytime at +1 (862) 358-8238.");
+      });
+  } else {
+    alert("Web audio is supported on modern browsers. You can also dial the live line anytime at +1 (862) 358-8238.");
+  }
 }
 
-// ── 7. STRIPE CHECKOUT MODAL ──────────────────────────────────────────────
+// ── 8. STRIPE CHECKOUT MODAL ──────────────────────────────────────────────
 
 function openCheckout(tier) {
   triggerHaptic([30]);
@@ -478,16 +568,15 @@ function openCheckout(tier) {
     `Proceed to secure Stripe billing to activate your monthly calling minutes, scheduled daily blessings, and the Prayer Bank?`
   );
   if (confirmed) {
-    // In production, redirects to Stripe Customer Checkout session endpoint:
-    // window.location.href = `/api/create-checkout-session?tier=${tier}`;
     alert(`Thank you for entering the PrayPal Fellowship. Your ${tierName} subscription will be activated upon Stripe settlement.`);
   }
 }
 
-// ── 8. INITIALIZATION ─────────────────────────────────────────────────────
+// ── 9. INITIALIZATION ─────────────────────────────────────────────────────
 
 document.addEventListener("DOMContentLoaded", () => {
-  selectGuide("god");
-  setScripture("sanskrit");
+  selectGuide("atrium");
+  setScripture("english");
   updateMalaDisplay();
+  applyStoryFilters();
 });

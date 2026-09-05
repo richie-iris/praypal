@@ -914,3 +914,451 @@ p {
     font-size: 1rem;
   }
 }
+
+/* ── ATRIUM SHOWCASE & SANCTUARY ENTRANCE ────────────────────────────────── */
+.atrium-section {
+  padding: 80px 0;
+  position: relative;
+}
+
+.atrium-card {
+  background: linear-gradient(145deg, rgba(21, 28, 51, 0.9) 0%, rgba(10, 15, 29, 0.95) 100%);
+  border: 1px solid var(--border-gold);
+  border-radius: var(--radius-lg);
+  padding: 40px;
+  box-shadow: var(--shadow-glow);
+  position: relative;
+  overflow: hidden;
+}
+
+.atrium-card::before {
+  content: '';
+  position: absolute;
+  top: -100px;
+  right: -100px;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(229, 169, 60, 0.12) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.atrium-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 40px;
+  align-items: center;
+}
+
+.atrium-dialogue {
+  background: rgba(7, 10, 19, 0.8);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 24px;
+}
+
+.dialogue-turn {
+  margin-bottom: 16px;
+  display: flex;
+  gap: 12px;
+}
+
+.dialogue-avatar {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.dialogue-bubble {
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: var(--text-pure);
+}
+
+.dialogue-bubble strong {
+  color: var(--gold-light);
+  display: block;
+  margin-bottom: 4px;
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.dialogue-turn.caller .dialogue-bubble {
+  background: rgba(58, 112, 226, 0.15);
+  border: 1px solid rgba(58, 112, 226, 0.3);
+}
+
+/* ── PANTHEON 9 PERSONAS GRID ────────────────────────────────────────────── */
+.pantheon-section {
+  padding: 90px 0;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.pantheon-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 24px;
+  margin-top: 48px;
+}
+
+.persona-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 28px 24px;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.persona-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--border-gold);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.5), 0 0 24px rgba(229, 169, 60, 0.12);
+  background: var(--bg-card-hover);
+}
+
+.persona-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.persona-icon {
+  font-size: 2.2rem;
+  width: 54px;
+  height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+}
+
+.persona-title h3 {
+  font-size: 1.15rem;
+  margin-bottom: 2px;
+  color: var(--text-pure);
+}
+
+.persona-sub {
+  font-size: 0.8rem;
+  color: var(--gold-light);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.voice-specs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.spec-pill {
+  font-size: 0.75rem;
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-muted);
+}
+
+.spec-pill.voice-name {
+  background: rgba(229, 169, 60, 0.12);
+  border-color: rgba(229, 169, 60, 0.3);
+  color: var(--gold-light);
+  font-weight: 600;
+}
+
+.persona-motto {
+  font-style: italic;
+  font-size: 0.9rem;
+  color: var(--text-pure);
+  margin-bottom: 14px;
+  line-height: 1.5;
+  border-left: 2px solid var(--gold-primary);
+  padding-left: 10px;
+}
+
+.persona-meta {
+  margin-top: auto;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-subtle);
+  font-size: 0.82rem;
+  color: var(--text-dim);
+}
+
+.persona-seed {
+  margin-top: 6px;
+  color: var(--gold-light);
+  font-size: 0.8rem;
+}
+
+/* ── SACRED CAPABILITIES & SKILLS GRID ───────────────────────────────────── */
+.skills-section {
+  padding: 90px 0;
+  background: rgba(10, 15, 29, 0.6);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.skills-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+  margin-top: 48px;
+}
+
+.skill-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 24px;
+  transition: all 0.25s ease;
+}
+
+.skill-card:hover {
+  border-color: rgba(229, 169, 60, 0.4);
+  transform: translateY(-2px);
+}
+
+.skill-icon {
+  font-size: 1.8rem;
+  margin-bottom: 12px;
+  display: inline-block;
+}
+
+.skill-card h4 {
+  font-size: 1.05rem;
+  margin-bottom: 6px;
+  color: var(--text-pure);
+}
+
+.skill-card p {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.skill-badge {
+  display: inline-block;
+  margin-top: 10px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  background: rgba(56, 161, 105, 0.15);
+  color: #68D391;
+  border: 1px solid rgba(56, 161, 105, 0.3);
+}
+
+/* ── MULTI-FAITH USER STORIES SECTION ────────────────────────────────────── */
+.stories-section {
+  padding: 90px 0;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.stories-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin: 36px 0 40px;
+}
+
+.filter-btn {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  padding: 8px 18px;
+  border-radius: var(--radius-full);
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filter-btn:hover {
+  color: var(--text-pure);
+  border-color: rgba(229, 169, 60, 0.4);
+}
+
+.filter-btn.active {
+  background: rgba(229, 169, 60, 0.15);
+  border-color: var(--gold-primary);
+  color: var(--gold-light);
+  font-weight: 600;
+}
+
+.stories-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 24px;
+}
+
+.story-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.25s ease;
+}
+
+.story-card:hover {
+  border-color: rgba(229, 169, 60, 0.3);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+}
+
+.story-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.story-category {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--gold-light);
+  font-weight: 600;
+}
+
+.story-event-badge {
+  font-size: 0.72rem;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  background: rgba(58, 112, 226, 0.15);
+  color: #90CDF4;
+  border: 1px solid rgba(58, 112, 226, 0.3);
+}
+
+.story-title {
+  font-size: 1.12rem;
+  margin-bottom: 10px;
+  color: var(--text-pure);
+  line-height: 1.4;
+}
+
+.story-seeker {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  margin-bottom: 12px;
+}
+
+.story-body {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin-bottom: 16px;
+  flex-grow: 1;
+}
+
+.story-resolution {
+  background: rgba(7, 10, 19, 0.6);
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 0.84rem;
+  border-left: 2px solid var(--gold-primary);
+  color: var(--text-pure);
+}
+
+.story-resolution strong {
+  color: var(--gold-light);
+}
+
+@media (max-width: 900px) {
+  .atrium-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* Story Filtering & Event Badges */
+.filter-group-wrap {
+  margin: 28px 0 36px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+}
+
+.filter-group-title {
+  font-size: 0.76rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold-light);
+  font-weight: 600;
+  text-align: center;
+}
+
+.stories-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.event-filters .filter-btn {
+  background: rgba(58, 112, 226, 0.08);
+  border-color: rgba(58, 112, 226, 0.25);
+  color: #BEE3F8;
+  font-size: 0.82rem;
+}
+
+.event-filters .filter-btn:hover {
+  background: rgba(58, 112, 226, 0.18);
+  border-color: #63B3ED;
+  color: #fff;
+}
+
+.event-filters .filter-btn.active {
+  background: rgba(58, 112, 226, 0.35);
+  border-color: #90CDF4;
+  color: #fff;
+  font-weight: 600;
+  box-shadow: 0 0 12px rgba(58, 112, 226, 0.3);
+}
+
+.fade-in {
+  animation: cardFadeIn 0.3s ease-out forwards;
+}
+
+@keyframes cardFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.btn-select-altar {
+  margin-top: 14px;
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  background: rgba(229, 169, 60, 0.1);
+  border: 1px solid rgba(229, 169, 60, 0.28);
+  color: var(--gold-light);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+  text-align: center;
+}
+
+.btn-select-altar:hover {
+  background: rgba(229, 169, 60, 0.25);
+  border-color: var(--gold-primary);
+  color: #fff;
+  transform: translateY(-1px);
+}
