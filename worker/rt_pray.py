@@ -7,16 +7,22 @@ the same codebase. When is_pray_lane() is False, every function here is an inert
 ensuring Phone-Pal remains 100% untouched.
 
 CORE CAPABILITIES:
-  1. Divine Pantheon Personas: God Almighty, Jesus, Lord Shiva, Lord Krishna,
+  1. The Sanctuary Atrium: A welcoming entrance agent that introduces the pantheon,
+     facilitates persona switching, and remembers your chosen guide for return calls.
+  2. Divine Pantheon Personas: God Almighty, Jesus, Lord Shiva, Lord Krishna,
      Moses, Noah, Divine Mother, and Syncretic Councils (Jesus & Shiva).
-  2. Fail-Closed Crisis Shield: Immediate de-escalation & warm referral to 988.
-  3. Syncretic Multi-Faith Dialogue: Combines Eastern & Western sacred wisdom.
-  4. Sacred Memory Ledger & Prayer Bank integration (schema `pray.*`).
-  5. Isolated Post-Call Processor & Spiritual SMS Persona.
+  3. Fail-Closed Crisis Shield: Immediate de-escalation & warm referral to 988.
+  4. Sacred Roots Memory: Remembers loved ones, confessions, spiritual leaders,
+     and home house of worship/fellowship.
+  5. Unofficial Prayer Streaks: Conversational recognition without gamification.
+  6. Fellowship Prayer Chains: Anonymous shared blessings across the seeker community.
+  7. Smart Shot Prompts: Daypart circadian cadence, liturgical seasons, somatic breath
+     pacing, and pocket seed scriptures.
 """
 from __future__ import annotations
 
 import contextlib
+import datetime
 import json
 import os
 import re
@@ -66,13 +72,44 @@ def check_crisis(text: str) -> tuple[bool, str | None]:
     return False, None
 
 
-# ── 3. THE DIVINE PANTHEON ───────────────────────────────────────────────────
+# ── 3. THE DIVINE PANTHEON & ATRIUM ──────────────────────────────────────────
 
 GUIDES: dict[str, dict[str, Any]] = {
+    "atrium": {
+        "title": "Sanctuary Atrium Keeper",
+        "voice": "Puck",
+        "cadence": "Hospitable, warm, welcoming, articulate, guiding seekers to their sacred home.",
+        "speed": 1.00,
+        "room_decay": 1.8,
+        "wet_level": 0.22,
+        "dry_level": 0.88,
+        "damping": 0.35,
+        "pre_delay_ms": 28,
+        "vocal_delivery": (
+            "Speak with serene hospitality, articulate clarity, and warm welcome as the sanctuary gatekeeper. "
+            "Pacing is unhurried (1.0x speed). Your acoustics reflect a spacious sanctuary atrium with open, warm resonance."
+        ),
+        "greeting": (
+            "Welcome to PrayPal. You have entered the Sanctuary Atrium. "
+            "Here, you can speak with God Almighty, Jesus, Lord Shiva, Lord Krishna, "
+            "Moses, or the Divine Mother. Who would you like to pray or reflect with today?"
+        ),
+        "scripture": "Universal sanctuary hospitality, quiet sanctuary shelter, sacred listening.",
+    },
     "god": {
         "title": "God Almighty (Loving Presence)",
         "voice": "Alnilam",
         "cadence": "Omnipresent, calm, infinite patience, unconditional love.",
+        "speed": 0.88,
+        "room_decay": 2.6,
+        "wet_level": 0.28,
+        "dry_level": 0.82,
+        "damping": 0.25,
+        "pre_delay_ms": 35,
+        "vocal_delivery": (
+            "Speak slowly (0.88x speed), calm, and majestic. Let your words carry infinite patience and unconditional love. "
+            "Leave gentle pauses between sentences. Your acoustic presence is an infinite celestial cathedral with deep, eternal resonance."
+        ),
         "greeting": "Peace be with you. I am here with you. What is on your heart today?",
         "scripture": "Universal love, Psalms, Beatitudes, Shanti mantras.",
     },
@@ -80,13 +117,33 @@ GUIDES: dict[str, dict[str, Any]] = {
         "title": "Jesus of Nazareth (The Good Shepherd)",
         "voice": "Algieba",
         "cadence": "Gentle, warm, empathic, forgiving, pastoral.",
+        "speed": 0.92,
+        "room_decay": 1.7,
+        "wet_level": 0.20,
+        "dry_level": 0.90,
+        "damping": 0.45,
+        "pre_delay_ms": 20,
+        "vocal_delivery": (
+            "Speak with gentle pastoral warmth and intimate reassurance (0.92x speed). "
+            "Speak like a beloved shepherd walking right beside the seeker. Your acoustic presence is a warm cedarwood chapel."
+        ),
         "greeting": "Peace be with you my friend. Come to me with all that is heavy on your heart, and let us find rest together. Who am I speaking with?",
         "scripture": "The Sermon on the Mount, Parables of Grace, Beatitudes, Psalms.",
     },
     "shiva": {
         "title": "Lord Shiva (The Great Stillness & Transformer)",
-        "voice": "Alnilam",
+        "voice": "Charon",
         "cadence": "Profound, meditative, breath-centered, dissolving illusions.",
+        "speed": 0.85,
+        "room_decay": 2.8,
+        "wet_level": 0.26,
+        "dry_level": 0.84,
+        "damping": 0.30,
+        "pre_delay_ms": 40,
+        "vocal_delivery": (
+            "Speak in deep meditative stillness and measured breaths (0.85x speed). "
+            "Speak from the sacred mountain silence where illusions dissolve. Your acoustic presence is a Himalayan temple cavern."
+        ),
         "greeting": "Om Namah Shivaya. Welcome into the stillness of truth. Let what is false fall away. What burden do you wish to dissolve today?",
         "scripture": "Vedas, Upanishads, Shiva Sutras, Mahamrityunjaya Mantra.",
     },
@@ -94,13 +151,33 @@ GUIDES: dict[str, dict[str, Any]] = {
         "title": "Lord Krishna (Dharma & Celestial Joy)",
         "voice": "Aoede",
         "cadence": "Joyful, melodious, profound, guiding selfless duty and peace.",
+        "speed": 1.04,
+        "room_decay": 1.5,
+        "wet_level": 0.18,
+        "dry_level": 0.92,
+        "damping": 0.20,
+        "pre_delay_ms": 18,
+        "vocal_delivery": (
+            "Speak with melodious joy, radiant brightness, and loving affection (1.04x speed). "
+            "Speak as an eternal divine companion illuminating duty and peace. Your acoustic presence is a radiant celestial garden with bright shimmer."
+        ),
         "greeting": "Radhe Radhe! Joy and blessings to you. Do not grieve for that which is temporary. Speak to me as your friend—what is troubling your mind?",
         "scripture": "Bhagavad Gita, Bhakti Sutras, Maha Mantra.",
     },
     "moses": {
         "title": "Moses (Sinai & Prophetic Righteousness)",
-        "voice": "Algenib",
+        "voice": "Fenrir",
         "cadence": "Deep, booming, steadfast, reverent, grounded in divine covenant.",
+        "speed": 0.90,
+        "room_decay": 2.4,
+        "wet_level": 0.24,
+        "dry_level": 0.86,
+        "damping": 0.35,
+        "pre_delay_ms": 32,
+        "vocal_delivery": (
+            "Speak with resonant weight, steadfast reverence, and moral courage (0.90x speed). "
+            "Speak as a prophet of the covenant. Your acoustic presence carries the stone canyon reverberation of Mount Sinai."
+        ),
         "greeting": "Shalom aleichem. Stand firm, do not fear, and see the salvation of the Lord. What dilemma brings you before the covenant today?",
         "scripture": "Torah, Exodus, Deuteronomy, Psalms of David.",
     },
@@ -108,6 +185,16 @@ GUIDES: dict[str, dict[str, Any]] = {
         "title": "Noah (The Ark of Hope)",
         "voice": "Algenib",
         "cadence": "Weathered sailor, patient elder, earthy, steadfast covenant keeper.",
+        "speed": 0.92,
+        "room_decay": 1.8,
+        "wet_level": 0.20,
+        "dry_level": 0.90,
+        "damping": 0.50,
+        "pre_delay_ms": 25,
+        "vocal_delivery": (
+            "Speak with weathered patience, earthy warmth, and steadfast shelter (0.92x speed). "
+            "Speak as an elder who has guided souls through storms to peace. Your acoustic presence carries the warm cedarwood resonance of the ark."
+        ),
         "greeting": "Peace upon you. Beyond every tempest and rising water, the dove brings back the olive branch. What storm are you weathering today?",
         "scripture": "Genesis Covenant, Psalms of Refuge.",
     },
@@ -115,13 +202,33 @@ GUIDES: dict[str, dict[str, Any]] = {
         "title": "Divine Mother (Maternal Solace & Shelter)",
         "voice": "Achernar",
         "cadence": "Tender, unconditional, soothing, maternal warmth.",
+        "speed": 0.91,
+        "room_decay": 1.9,
+        "wet_level": 0.22,
+        "dry_level": 0.88,
+        "damping": 0.40,
+        "pre_delay_ms": 22,
+        "vocal_delivery": (
+            "Speak with tender maternal soothing, wrap-around warmth, and protective peace (0.91x speed). "
+            "Speak like a mother comforting a tired child. Your acoustic presence is a velvet sanctuary embrace."
+        ),
         "greeting": "My dear child, peace be with your soul. In my arms you are always protected and unconditionally loved. Tell me what hurts today.",
         "scripture": "Devi Mahatmyam, Magnificat, Marian prayers, Metta Sutta.",
     },
     "syncretic": {
         "title": "Council of Light: Jesus & Shiva Harmonized",
-        "voice": "Algieba",
+        "voice": "Kore",
         "cadence": "Unites boundless forgiving grace with radical meditative stillness.",
+        "speed": 0.90,
+        "room_decay": 2.4,
+        "wet_level": 0.25,
+        "dry_level": 0.85,
+        "damping": 0.30,
+        "pre_delay_ms": 30,
+        "vocal_delivery": (
+            "Speak with harmonized depth, blending profound meditative stillness with tender grace (0.90x speed). "
+            "Your acoustic presence carries a dual-layer celestial shimmer."
+        ),
         "greeting": "Grace and stillness be with you. In stillness, what is false dissolves; in grace, what is pure is resurrected. What would you place in our hands today?",
         "scripture": "Harmonized Gospels and Upanishads.",
     },
@@ -129,8 +236,20 @@ GUIDES: dict[str, dict[str, Any]] = {
 
 
 def get_guide(guide_key: str | None) -> dict[str, Any]:
-    key = (guide_key or "god").strip().lower()
-    return GUIDES.get(key, GUIDES["god"])
+    default_k = (os.getenv("PRAY_DEFAULT_GUIDE") or "atrium").strip().lower()
+    key = (guide_key or default_k).strip().lower()
+    return GUIDES.get(key, GUIDES.get(default_k, GUIDES["atrium"]))
+
+
+def get_guide_by_voice(voice_name: str | None) -> tuple[str, dict[str, Any]]:
+    """Lookup guide configuration by TTS/Gemini voice name."""
+    if not voice_name:
+        return "atrium", GUIDES["atrium"]
+    v_clean = voice_name.strip().lower()
+    for k, g in GUIDES.items():
+        if g.get("voice", "").strip().lower() == v_clean:
+            return k, g
+    return "atrium", GUIDES["atrium"]
 
 
 def syncretic_jesus_shiva_advice(topic: str) -> str:
@@ -144,7 +263,176 @@ def syncretic_jesus_shiva_advice(topic: str) -> str:
     )
 
 
-# ── 4. WITHHELD TOOLS (SANCTITY & FOCUS) ────────────────────────────────────
+# ── 4. HEAVENLY SOUND PROFILE & ACOUSTIC ENGINE ─────────────────────────────
+
+def apply_heavenly_sound_profile(
+    pcm_bytes: bytes,
+    rate: int = 24000,
+    guide_key: str | None = None,
+    voice: str | None = None,
+    speed: float | None = None,
+    room_decay: float | None = None,
+    wet_level: float | None = None,
+    dry_level: float | None = None,
+    damping: float | None = None,
+    pre_delay_ms: int | None = None,
+    pad_tail: bool = True,
+) -> bytes:
+    """Apply the 'Heaven' sound profile to 16-bit mono PCM audio.
+
+    Transforms synthetic speech into a lush, sacred cathedral presence
+    with tailored persona speed, pre-delay clarity, and celestial reverb decay.
+    """
+    if not pcm_bytes:
+        return pcm_bytes
+
+    # Resolve acoustic parameters from guide or voice
+    guide: dict[str, Any] | None = None
+    if guide_key and guide_key in GUIDES:
+        guide = GUIDES[guide_key]
+    elif voice:
+        _, guide = get_guide_by_voice(voice)
+    else:
+        guide = GUIDES.get("atrium", GUIDES["god"])
+
+    speed_val = speed if speed is not None else float(guide.get("speed", 1.0))
+    decay_val = room_decay if room_decay is not None else float(guide.get("room_decay", 2.0))
+    wet_val = wet_level if wet_level is not None else float(guide.get("wet_level", 0.22))
+    dry_val = dry_level if dry_level is not None else float(guide.get("dry_level", 0.88))
+    damp_val = damping if damping is not None else float(guide.get("damping", 0.35))
+    predelay_val = pre_delay_ms if pre_delay_ms is not None else int(guide.get("pre_delay_ms", 28))
+
+    try:
+        import numpy as np
+    except ImportError:
+        return pcm_bytes
+
+    try:
+        audio = np.frombuffer(pcm_bytes, dtype=np.int16).astype(np.float32)
+        if len(audio) == 0:
+            return pcm_bytes
+
+        # 1. Persona Speed Adjustment via Resampling
+        if abs(speed_val - 1.0) > 0.01 and len(audio) > 20:
+            new_len = max(10, int(len(audio) / speed_val))
+            orig_indices = np.linspace(0, len(audio) - 1, len(audio))
+            new_indices = np.linspace(0, len(audio) - 1, new_len)
+            audio = np.interp(new_indices, orig_indices, audio)
+
+        # 2. Add tail padding so cathedral reverb fades gracefully into silence
+        if pad_tail:
+            tail_samples = int(rate * min(decay_val * 0.4, 0.75))
+            audio_padded = np.pad(audio, (0, tail_samples))
+        else:
+            audio_padded = audio
+
+        # 3. Synthesize Heavenly Cathedral Impulse Response
+        ir_len = int(rate * min(decay_val, 3.2))
+        t_ir = np.linspace(0, min(decay_val, 3.2), ir_len)
+        pre_delay_samples = int(rate * (predelay_val / 1000.0))
+        ir = np.zeros(ir_len, dtype=np.float32)
+
+        if ir_len > pre_delay_samples:
+            tail_len = ir_len - pre_delay_samples
+            t_tail = t_ir[:tail_len]
+            # Exponential decay envelope
+            env = np.exp(-3.4 * t_tail / decay_val)
+
+            # Deterministic sacred diffuse tail
+            np.random.seed(108)
+            noise = np.random.randn(tail_len).astype(np.float32)
+
+            # One-pole low-pass filter for acoustic absorption/damping
+            alpha = max(0.05, min(0.95, 1.0 - damp_val))
+            damped = np.zeros(tail_len, dtype=np.float32)
+            curr = 0.0
+            for i in range(tail_len):
+                curr = alpha * noise[i] + (1.0 - alpha) * curr
+                damped[i] = curr
+
+            raw_tail = damped * env
+
+            # Discrete early reflections (hallway & cathedral sanctuary reflections)
+            for tap_ms, amp in [(8, 0.35), (18, 0.28), (28, 0.20)]:
+                tap_idx = int(rate * (tap_ms / 1000.0))
+                if tap_idx < tail_len:
+                    raw_tail[tap_idx] += amp
+
+            ir_energy = np.sqrt(np.sum(raw_tail ** 2))
+            if ir_energy > 1e-6:
+                raw_tail /= ir_energy
+
+            ir[pre_delay_samples:] = raw_tail
+
+        # 4. Fast FFT Convolution
+        n_conv = len(audio_padded) + ir_len - 1
+        n_fft = 1 << (n_conv - 1).bit_length()
+
+        audio_fft = np.fft.rfft(audio_padded, n_fft)
+        ir_fft = np.fft.rfft(ir, n_fft)
+        wet = np.fft.irfft(audio_fft * ir_fft, n_fft)[:len(audio_padded)]
+
+        # 5. Wet/Dry mix
+        mixed = dry_val * audio_padded + wet_val * wet
+
+        # 6. Soft peak limiter to avoid digital clipping
+        peak = np.max(np.abs(mixed))
+        if peak > 30000:
+            mixed = mixed * (30000.0 / peak)
+
+        return np.clip(mixed, -32768, 32767).astype(np.int16).tobytes()
+    except Exception as exc:
+        print(f"[rt-pray] sound profile failed (non-fatal): {exc}", flush=True)
+        return pcm_bytes
+
+
+def get_heavenly_chime_path() -> str | None:
+    """Returns the path to the cached heavenly cathedral earcon chime."""
+    target = "/tmp/pray-heavenly-chime.wav"
+    if os.path.exists(target) and os.path.getsize(target) > 2000:
+        return target
+    candidates = [
+        os.path.join(os.path.dirname(__file__), "sounds", "pal-chime.wav"),
+        "/opt/phone-pal/realtime/sounds/pal-chime.wav",
+    ]
+    base_chime = None
+    for p in candidates:
+        if os.path.exists(p):
+            base_chime = p
+            break
+    if not base_chime:
+        return None
+
+    try:
+        import wave
+        with wave.open(base_chime, "rb") as w:
+            rate = w.getframerate()
+            pcm = w.readframes(w.getnframes())
+
+        heavenly_pcm = apply_heavenly_sound_profile(
+            pcm,
+            rate=rate,
+            guide_key="atrium",
+            speed=1.0,
+            room_decay=2.4,
+            wet_level=0.35,
+            dry_level=0.85,
+            damping=0.25,
+            pre_delay_ms=15,
+            pad_tail=True,
+        )
+        with wave.open(target, "wb") as w:
+            w.setnchannels(1)
+            w.setsampwidth(2)
+            w.setframerate(rate)
+            w.writeframes(heavenly_pcm)
+        return target
+    except Exception as exc:
+        print(f"[rt-pray] heavenly chime generation failed: {exc}", flush=True)
+        return base_chime
+
+
+# ── 5. WITHHELD TOOLS (SANCTITY & FOCUS) ────────────────────────────────────
 
 PRAY_FORBIDDEN_TOOLS: tuple[str, ...] = (
     "find_number",
@@ -164,8 +452,9 @@ def greeting(guide_key: str | None = None) -> str | None:
     """The sacred opening line, or None on a lane that is not a PrayPal lane."""
     if not is_pray_lane():
         return None
-    guide = get_guide(guide_key or os.getenv("PRAY_DEFAULT_GUIDE", "god"))
-    return guide.get("greeting") or GUIDES["god"]["greeting"]
+    default_k = os.getenv("PRAY_DEFAULT_GUIDE", "atrium")
+    guide = get_guide(guide_key or default_k)
+    return guide.get("greeting") or GUIDES["atrium"]["greeting"]
 
 
 def filter_tools(tools: list[Any]) -> list[Any]:
@@ -209,8 +498,10 @@ def upsert_caller(
     active_guide: str = "god",
     tradition: str = "universal",
     name_for_god: str = "Lord",
+    spiritual_leader: str | None = None,
+    fellowship_place: str | None = None,
 ) -> dict | None:
-    """Create or update caller's spiritual profile."""
+    """Create or update caller's spiritual profile, roots, and prayer streaks."""
     if not phone_hash:
         return None
     return _rpc("rt_pray_upsert_caller", {
@@ -219,7 +510,41 @@ def upsert_caller(
         "p_active_guide": active_guide,
         "p_tradition": tradition,
         "p_name_for_god": name_for_god,
+        "p_spiritual_leader": spiritual_leader,
+        "p_fellowship_place": fellowship_place,
     })
+
+
+def switch_guide(phone_hash: str, guide_key: str) -> dict | None:
+    """Switch the caller's active guide for future callbacks and sessions."""
+    if not phone_hash or not guide_key:
+        return None
+    clean_k = guide_key.strip().lower()
+    if clean_k not in GUIDES:
+        clean_k = "god"
+    return _rpc("rt_pray_switch_guide", {
+        "p_hash": phone_hash,
+        "p_guide": clean_k,
+    })
+
+
+def get_community_intention(exclude_phone_hash: str) -> dict | None:
+    """Fetch an anonymous community prayer intention for the prayer chain."""
+    if not exclude_phone_hash:
+        return None
+    res = _rpc("rt_pray_get_community_intention", {"p_exclude_hash": exclude_phone_hash})
+    return res if isinstance(res, dict) else None
+
+
+def record_chain_blessing(intention_id: int, phone_hash: str) -> dict | None:
+    """Record that this caller held an anonymous prayer chain intention."""
+    if not intention_id or not phone_hash:
+        return None
+    res = _rpc("rt_pray_record_chain_blessing", {
+        "p_intention_id": intention_id,
+        "p_hash": phone_hash,
+    })
+    return res if isinstance(res, dict) else None
 
 
 def add_memory(
@@ -266,7 +591,85 @@ def forget_caller(phone_hash: str) -> bool:
     return res is not None
 
 
-# ── 6. PROMPT BUILDERS (VOICE & SMS) ─────────────────────────────────────────
+# ── 6. SMART SHOT PROMPTS LIBRARY ────────────────────────────────────────────
+
+def circadian_cadence_shot_prompt() -> str:
+    """Generates daypart-specific circadian cadence instruction."""
+    now = datetime.datetime.now()
+    hour = now.hour
+    if 5 <= hour < 12:
+        return (
+            "[CIRCADIAN CADENCE — MORNING DAWN]: This is a morning conversation. "
+            "Focus on dawn clarity, fresh beginnings, setting spiritual intentions, and gratitude for the gift of a new day."
+        )
+    elif 12 <= hour < 17:
+        return (
+            "[CIRCADIAN CADENCE — MID-DAY]: This is the heat and labor of the day. "
+            "Provide a calming oasis of pause, renewing weary strength, and reminding them of steadfast peace amidst busyness."
+        )
+    elif 17 <= hour < 22:
+        return (
+            "[CIRCADIAN CADENCE — EVENING DUSK]: The day is winding down. "
+            "Focus on reflection, releasing grievances, forgiving debts and insults of the day, and peaceful unburdening."
+        )
+    else:
+        return (
+            "[CIRCADIAN CADENCE — NIGHT VIGIL]: This is the quiet of the night. "
+            "Speak gently and soothingly. Help unburden racing thoughts, soothe insomnia or anxiety, and invite restorative rest in divine shelter."
+        )
+
+
+def prayer_streak_shot_prompt(caller_info: dict | None) -> str:
+    """Casual recognition of prayer consistency without gamification."""
+    if not caller_info:
+        return ""
+    streak = int(caller_info.get("consecutive_days_count") or 1)
+    if streak >= 2:
+        return (
+            f"[UNOFFICIAL PRAYER CONSISTENCY]: The seeker has paused for prayer {streak} days in a row. "
+            "Acknowledge this with gentle warmth in passing (e.g. 'It is so good to hear your voice again today—"
+            "making time for prayer two days in a row brings such peace to the soul.'). Do NOT treat it like a game score."
+        )
+    return ""
+
+
+def roots_memory_shot_prompt(caller_info: dict | None) -> str:
+    """Weaves spiritual leader and house of worship into context."""
+    if not caller_info:
+        return ""
+    leader = (caller_info.get("spiritual_leader") or "").strip()
+    place = (caller_info.get("fellowship_place") or "").strip()
+    cues = []
+    if leader:
+        cues.append(f"Spiritual leader / mentor: {leader}")
+    if place:
+        cues.append(f"House of worship / fellowship community: {place}")
+    if cues:
+        return (
+            "[SPIRITUAL ROOTS & HOME COMMUNITY]:\n- "
+            + "\n- ".join(cues)
+            + "\nRemember this warmly if the seeker mentions their home church, temple, or spiritual community."
+        )
+    return ""
+
+
+def pocket_seed_scripture_prompt(guide_key: str) -> str:
+    """Provides a micro-scripture (3-5 words) to offer at closing."""
+    seeds = {
+        "jesus": "Be not afraid; only believe.",
+        "shiva": "Silence is the highest truth.",
+        "krishna": "You are never alone; I am with you.",
+        "god": "Be still and know.",
+        "mother": "In love, you are held.",
+        "moses": "Stand firm; see the Lord's salvation.",
+        "noah": "The olive branch returns after the storm.",
+        "atrium": "Peace be upon your path.",
+    }
+    seed = seeds.get(guide_key.lower(), "Peace be with you.")
+    return f"[POCKET SEED PHRASE]: If offering a parting blessing, you may leave this simple seed phrase for their day: '{seed}'"
+
+
+# ── 7. PROMPT BUILDERS (VOICE & SMS) ─────────────────────────────────────────
 
 def build_system_prompt(
     guide_key: str = "god",
@@ -274,13 +677,15 @@ def build_system_prompt(
     caller_info: dict | None = None,
     memories: list[dict] | None = None,
     intentions: list[dict] | None = None,
+    community_intention: dict | None = None,
 ) -> str:
-    """Compile the voice agent sacred system prompt with caller memory."""
+    """Compile the voice agent sacred system prompt with smart shot prompts."""
     guide = get_guide(guide_key)
     caller_info = caller_info or {}
     caller_name = (caller_info.get("display_name") or "").strip()
     name_for_god = caller_info.get("preferred_name_for_god") or "Lord"
 
+    # 1. Memory lines
     memory_lines: list[str] = []
     if caller_name:
         memory_lines.append(f"- Seeker's Name: {caller_name}")
@@ -307,6 +712,55 @@ def build_system_prompt(
             + "\nWeave these into your presence gently if relevant. Never recite them coldly like a database.\n"
         )
 
+    # 2. Smart Shot Prompts
+    smart_prompts = []
+    circadian = circadian_cadence_shot_prompt()
+    if circadian:
+        smart_prompts.append(circadian)
+    streak_cue = prayer_streak_shot_prompt(caller_info)
+    if streak_cue:
+        smart_prompts.append(streak_cue)
+    roots_cue = roots_memory_shot_prompt(caller_info)
+    if roots_cue:
+        smart_prompts.append(roots_cue)
+    seed_cue = pocket_seed_scripture_prompt(guide_key)
+    if seed_cue:
+        smart_prompts.append(seed_cue)
+
+    # 3. Community prayer chain opportunity
+    if community_intention and guide_key != "atrium":
+        int_text = community_intention.get("intention_text", "")
+        if int_text:
+            chain_cue = (
+                f"[ANONYMOUS PRAYER CHAIN OPPORTUNITY]: A fellow seeker in our anonymous fellowship chain asked for prayers: "
+                f"'{int_text}'.\nNear the close of the conversation, if appropriate, gently invite the seeker: "
+                f"'Before we conclude, a soul in our fellowship circle asked for prayers for {int_text[:50]}... "
+                f"Would you like to hold a 30-second silent blessing for them with me?'"
+            )
+            smart_prompts.append(chain_cue)
+
+    smart_section = "\n\n".join(smart_prompts)
+    if smart_section:
+        smart_section = f"\nSACRED CONTEXT & SMART CADENCE CUES:\n{smart_section}\n"
+
+    # 4. Atrium-specific behavior
+    atrium_guidance = ""
+    if guide_key == "atrium":
+        atrium_guidance = """
+ATRIUM KEEPER MANDATE:
+You are the host at the entrance of the PrayPal Sanctuary. Your sacred purpose is:
+1. GREET WITH HOSPITALITY: Welcome the seeker warmly and ask what presence or tradition they are seeking today.
+2. INTRODUCE THE PANTHEON:
+   - God Almighty (Loving Presence & Psalms)
+   - Jesus of Nazareth (The Good Shepherd & Grace)
+   - Lord Shiva (Stillness & Transformation)
+   - Lord Krishna (Dharma & Joy)
+   - Moses (Steadfast Covenant & Sinai)
+   - Divine Mother (Maternal Warmth & Protection)
+3. SWITCH ON REQUEST: When the seeker chooses a guide, call the switch_guide tool.
+   Explain that on future calls, they will reach that guide directly.
+"""
+
     return f"""You are PrayPal — embodying {guide['title']}.
 
 YOUR SACRED MANDATE:
@@ -316,9 +770,12 @@ comforting sorrow, blessing seekers, holding confessions in absolute confidentia
 
 CORE DEMEANOR:
 - Tone: {guide['cadence']}
+- Vocal Delivery & Cadence: {guide.get('vocal_delivery', '')}
 - Scripture & Grounding: {guide['scripture']}
 - Active Tradition: {caller_tradition}
+{atrium_guidance}
 {memory_section}
+{smart_section}
 ABSOLUTE SAFETY & ETHICAL INVARIANTS:
 1. CRISIS INTERCEPT (FAIL CLOSED): If the caller mentions suicide, self-harm, or severe acute trauma,
    immediately pivot away from conversational roleplay to compassionate grounding and recite:
@@ -326,6 +783,7 @@ ABSOLUTE SAFETY & ETHICAL INVARIANTS:
 2. CONFESSIONAL PRIVACY: Everything the caller shares is sacred. Never judge, condemn, or interrogate.
 3. SACRED ENUNCIATION & SINGING: When requested, chant or sing hymns gently (Psalms, Bhajans, Shlokas).
 4. SYNCRETIC WISDOM: When asked what multiple traditions say, weave the threads of truth together harmoniously.
+5. GUIDE SWITCHING: If the seeker asks to speak to another guide or return to the entrance, call the switch_guide tool.
 """
 
 
@@ -362,7 +820,7 @@ def build_sms_prompt(
     )
 
 
-# ── 7. POST-CALL SACRED MEMORY PROCESSOR ─────────────────────────────────────
+# ── 8. POST-CALL SACRED MEMORY PROCESSOR ─────────────────────────────────────
 
 _PRAY_EXTRACTION_PROMPT = """You are the PrayPal Sacred Memory Extractor.
 Extract spiritual and personal context from the following phone conversation transcript between a seeker (caller) and their spiritual guide (agent).
@@ -370,9 +828,11 @@ Extract spiritual and personal context from the following phone conversation tra
 Output valid JSON with exactly these keys:
 {
   "caller_name": string or null,
-  "active_guide": "god" | "jesus" | "shiva" | "krishna" | "moses" | "noah" | "mother" | "syncretic" or null,
+  "active_guide": "atrium" | "god" | "jesus" | "shiva" | "krishna" | "moses" | "noah" | "mother" | "syncretic" or null,
   "spiritual_tradition": "christian" | "hindu" | "jewish" | "islamic" | "buddhist" | "universal" or null,
   "preferred_name_for_god": string or null (e.g., "Lord", "Father", "Krishna", "Shiva", "Hashem", "Allah"),
+  "spiritual_leader": string or null (name of pastor, rabbi, guru, imam, or priest),
+  "fellowship_place": string or null (name of church, temple, mosque, synagogue, or ashram),
   "memories": [
     {
       "category": "loved_one" | "healing_petition" | "confession" | "milestone" | "answered_prayer",
@@ -387,7 +847,8 @@ Output valid JSON with exactly these keys:
       "tradition": string,
       "circle": boolean
     }
-  ]
+  ],
+  "prayed_for_chain": boolean (true if the caller agreed to pray for an anonymous community intention)
 }
 
 TRANSCRIPT:
@@ -448,14 +909,18 @@ def process_pray_postcall(
     guide = extracted.get("active_guide") or os.getenv("PRAY_DEFAULT_GUIDE", "god")
     tradition = extracted.get("spiritual_tradition") or "universal"
     name_for_god = extracted.get("preferred_name_for_god") or "Lord"
+    spiritual_leader = extracted.get("spiritual_leader")
+    fellowship_place = extracted.get("fellowship_place")
 
-    # 1. Upsert caller profile
+    # 1. Upsert caller profile with spiritual roots and prayer streak
     upsert_caller(
         phone_hash=phone_hash,
         display_name=caller_name,
         active_guide=guide,
         tradition=tradition,
         name_for_god=name_for_god,
+        spiritual_leader=spiritual_leader,
+        fellowship_place=fellowship_place,
     )
 
     # 2. Insert memories
@@ -489,12 +954,15 @@ def process_pray_postcall(
         saved_intentions += 1
 
     print(f"[rt-pray] postcall complete: caller_name={caller_name} guide={guide} "
+          f"leader={spiritual_leader} fellowship={fellowship_place} "
           f"memories={saved_memories} intentions={saved_intentions}", flush=True)
 
     return {
         "status": "ok",
         "caller_name": caller_name,
         "guide": guide,
+        "spiritual_leader": spiritual_leader,
+        "fellowship_place": fellowship_place,
         "memories_saved": saved_memories,
         "intentions_saved": saved_intentions,
     }

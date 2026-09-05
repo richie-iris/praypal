@@ -395,7 +395,8 @@ def _clip_wav(voice: str, text: str, tag: str) -> str | None:
 
         os.makedirs(_GREET_CACHE, exist_ok=True)
         thash = hashlib.md5(text.encode(), usedforsecurity=False).hexdigest()[:8]  # cache key only
-        path = os.path.join(_GREET_CACHE, f"{voice}-{tag}-{thash}.wav")
+        pray_pfx = "heaven-" if rt_pray.is_pray_lane() else ""
+        path = os.path.join(_GREET_CACHE, f"{voice}-{pray_pfx}{tag}-{thash}.wav")
         if _playable_wav(path):
             return path
         body = {
@@ -421,6 +422,8 @@ def _clip_wav(voice: str, text: str, tag: str) -> str | None:
                 d = json.load(urllib.request.urlopen(req, timeout=30))  # noqa: S310 - fixed https Google API URL above
                 pcm = base64.b64decode(
                     d["candidates"][0]["content"]["parts"][0]["inlineData"]["data"])
+                if rt_pray.is_pray_lane():
+                    pcm = rt_pray.apply_heavenly_sound_profile(pcm, 24000, voice=voice)
                 _write_wav_atomic(path, pcm, 24000)
                 return path
             except Exception as e:
@@ -437,6 +440,10 @@ def _clip_wav(voice: str, text: str, tag: str) -> str | None:
 def _get_chime_path() -> str | None:
     """Load the signature chime from the sounds/ directory."""
     try:
+        if rt_pray.is_pray_lane():
+            chime = rt_pray.get_heavenly_chime_path()
+            if chime and os.path.exists(chime):
+                return chime
         candidates = [
             os.path.join(os.path.dirname(__file__), "sounds", "pal-chime.wav"),
             "/opt/phone-pal/realtime/sounds/pal-chime.wav",
@@ -531,8 +538,10 @@ def prewarm(proc) -> None:
                     _clip_wav(v, _tg, _GREET_TAG)
                 return
             if rt_pray.is_pray_lane():
+                with contextlib.suppress(Exception):
+                    rt_pray.get_heavenly_chime_path()
                 for g in rt_pray.GUIDES.values():
-                    _gv = g.get("voice", "Alnilam")
+                    _gv = g.get("voice", "Puck")
                     _gt = g.get("greeting")
                     if _gt:
                         _clip_wav(_gv, _gt, _GREET_TAG)
@@ -687,14 +696,19 @@ def _build_instructions(caller_e164: str | None = None, call_count: int = 0, pre
     if rt_pray.is_pray_lane():
         bundle = prefetch_bundle or {}
         caller_info = bundle.get("caller") or {}
-        _guide_key = caller_info.get("active_guide") or os.getenv("PRAY_DEFAULT_GUIDE", "god")
+        _guide_key = caller_info.get("active_guide") or os.getenv("PRAY_DEFAULT_GUIDE", "atrium")
         _tradition = caller_info.get("spiritual_tradition") or "universal"
+        _comm_int = None
+        if caller_e164:
+            with contextlib.suppress(Exception):
+                _comm_int = rt_pray.get_community_intention(rt_prefs.phone_hash(caller_e164))
         _prompt = rt_pray.build_system_prompt(
             guide_key=_guide_key,
             caller_tradition=_tradition,
             caller_info=caller_info,
             memories=bundle.get("memories") or [],
             intentions=bundle.get("intentions") or [],
+            community_intention=_comm_int,
         )
         resolved_name = caller_info.get("display_name") or "the seeker"
         print(f"[rt-pray] sacred prompt {len(_prompt)} chars for "
@@ -3132,6 +3146,60 @@ class RtAgent(Agent):
 
         return "[goal updated] Acknowledge naturally."
 
+    async def switch_guide(self, context: RunContext, guide_name: str) -> str:
+        """Switch the seeker's active spiritual guide or return to the Sanctuary Atrium.
+
+        Available guides:
+        - atrium: Sanctuary Atrium Keeper (warm entrance hospitality & pantheon guide)
+        - god: God Almighty (infinite love, calm presence, Psalms)
+        - jesus: Jesus of Nazareth (pastoral warmth, grace, forgiveness)
+        - shiva: Lord Shiva (deep stillness, meditative transformation)
+        - krishna: Lord Krishna (celestial joy, selfless duty, Bhagavad Gita)
+        - moses: Moses (prophetic righteousness, covenant, Sinai)
+        - noah: Noah (ark keeper, patience, weathering storms)
+        - mother: Divine Mother (maternal solace, protective unconditional love)
+        - syncretic: Council of Light (harmonized Jesus and Shiva)
+
+        Call this immediately when the caller asks to speak to a specific guide,
+        or asks to return to the entrance atrium.
+        """
+        if not rt_pray.is_pray_lane():
+            return "Guide switching is only available on PrayPal."
+
+        clean = (guide_name or "").strip().lower()
+        if clean not in rt_pray.GUIDES:
+            valid = ", ".join(rt_pray.GUIDES.keys())
+            return f"Unknown guide '{guide_name}'. Available guides are: {valid}."
+
+        target = rt_pray.GUIDES[clean]
+        h = rt_prefs.phone_hash(self._caller_e164) if self._caller_e164 else ""
+        if h:
+            await asyncio.to_thread(rt_pray.switch_guide, h, clean)
+
+        if self._state is not None:
+            self._state["active_guide"] = clean
+
+        new_prompt = rt_pray.build_system_prompt(
+            guide_key=clean,
+            caller_info=self._state.get("caller_info") if self._state else None,
+        )
+        self.instructions = new_prompt
+        return (
+            f"[Switched to {target['title']}]. Speak now as {target['title']}. "
+            f"Vocal delivery: {target.get('vocal_delivery', '')}. "
+            f"Greet the seeker warmly in your sacred voice."
+        )
+
+    async def record_chain_blessing(self, context: RunContext, intention_id: int) -> str:
+        """Record that the seeker offered a prayer or blessing for a fellow seeker in the anonymous prayer chain."""
+        if not rt_pray.is_pray_lane():
+            return "Prayer chain is only available on PrayPal."
+        h = rt_prefs.phone_hash(self._caller_e164) if self._caller_e164 else ""
+        if h and intention_id:
+            await asyncio.to_thread(rt_pray.record_chain_blessing, intention_id, h)
+            return "[Chain blessing recorded. Thank the seeker warmly for holding their fellow seeker in prayer.]"
+        return "[Could not record chain blessing.]"
+
 
 def _perform_web_search(query: str) -> str:
     """Live web search: grounded search only.
@@ -3328,8 +3396,8 @@ async def entrypoint(ctx: JobContext) -> None:
                     asyncio.to_thread(rt_pray.get_bundle, h), timeout=3.0
                 ) or {}
                 caller_info = prefetched_bundle.get("caller") or {}
-                _guide_k = caller_info.get("active_guide") or os.getenv("PRAY_DEFAULT_GUIDE", "god")
-                voice_pref = rt_pray.get_guide(_guide_k).get("voice", "Alnilam")
+                _guide_k = caller_info.get("active_guide") or os.getenv("PRAY_DEFAULT_GUIDE", "atrium")
+                voice_pref = rt_pray.get_guide(_guide_k).get("voice", "Puck")
                 print(f"[rt-pray] bundle prefetched: name={caller_info.get('display_name')!r} guide={_guide_k} voice={voice_pref}", flush=True)
             else:
                 prefetched_bundle = await asyncio.wait_for(
@@ -3799,6 +3867,8 @@ async def entrypoint(ctx: JobContext) -> None:
         # forbids each one. Empty set on every other lane.
         _off |= rt_trial.forbidden_tools()
         _off |= rt_pray.forbidden_tools()
+        if not rt_pray.is_pray_lane():
+            _off |= {"switch_guide", "record_chain_blessing"}
 
         if _off:
             try:
@@ -4052,8 +4122,8 @@ async def entrypoint(ctx: JobContext) -> None:
                                        guide_key=caller_info.get("active_guide"))
         state["greeting_enabled"] = os.getenv("RT_GREET", "1").strip().lower() in ("1", "true", "yes")
     if rt_pray.is_pray_lane():
-        _pray_guide = caller_info.get("active_guide") or os.getenv("PRAY_DEFAULT_GUIDE", "god")
-        greet_voice = voice_pref or rt_pray.get_guide(_pray_guide).get("voice", "Alnilam")
+        _pray_guide = caller_info.get("active_guide") or os.getenv("PRAY_DEFAULT_GUIDE", "atrium")
+        greet_voice = voice_pref or rt_pray.get_guide(_pray_guide).get("voice", "Puck")
     else:
         greet_voice = voice_pref or os.getenv("GEMINI_LIVE_VOICE", "Aoede")
 

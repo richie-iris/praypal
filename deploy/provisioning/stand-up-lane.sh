@@ -70,7 +70,7 @@ step 2 "Config — rendered from lane.env, never committed"
 # box from lane.env. It is the only thing that ever holds both halves at once.
 run bash "${HERE}/render-config.sh"
 
-step "2b" "Database — apply + verify schema migrations (01→24) & RPC readiness"
+step "2b" "Database — apply + verify schema migrations (01→25) & RPC readiness"
 # check_migrations.py needs the project ref + service key; migrate.py needs the
 # ref + Management API token. Both are lane.env's, so a lane that cannot be
 # verified is a lane that cannot be stood up — no "skipped" path here (#20).
