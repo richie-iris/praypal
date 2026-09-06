@@ -1,630 +1,392 @@
 /**
- * PRAYPAL — Interactive Sanctuary & Living Altar Application
- * Features:
- *  - Guide Switching (Atrium, God, Jesus, Shiva, Krishna, Moses, Noah, Mother, Council)
- *  - Dual Story Filtering (By Spiritual Tradition AND By Life Event Type)
- *  - Live Phonetic Syllable Animation (Sanskrit, Hebrew, Arabic, English)
- *  - Tactile Haptic Japa Mala Counter (Web Vibration API + 108 Bead Completion)
- *  - Zero-Latency Web Audio Synthesizer (Harmonic Sacred Soundscapes & Chanting Chime)
- *  - In-Browser Web Voice Session Simulation
+ * PRAYPAL — INTERACTIVE SANCTUARY & LIVING ALTAR APPLICATION
+ * Apple-Aesthetic Voice Experience, Web Audio Engine, & Living Altar Interactions
  */
 
-// ── 1. SACRED DATA DICTIONARIES ───────────────────────────────────────────
-
+// ── 1. AGENTS OF GOD DATA & CADENCES ───────────────────────────────────────
 const GUIDES = {
   atrium: {
-    name: "Sanctuary Atrium Keeper (Universal Host)",
-    icon: "🏛️",
-    motto: '"Welcome to the Sanctuary. Speak your need, and I will connect you with an Agent of God who brings you peace."',
-    theme: "universal",
-    tradition: "english"
+    name: "Sanctuary Atrium Keeper",
+    role: "Universal Host",
+    accent: "American English (Studio Presence)",
+    speed: 1.00,
+    quote: "Welcome to PrayPal. You have entered the Sanctuary Atrium. Tell me what is on your heart today, or who you would like to speak with.",
+    scripture: "Universal Shelter • Sacred Listening",
+    harmonics: [220, 330, 440]
   },
   god: {
-    name: "Agent of God (Loving Presence & Sacred Comfort)",
-    icon: "🕊️",
-    motto: '"Peace be with you. I am an agent of God here to listen, comfort, and pray with you in unconditional love."',
-    theme: "universal",
-    tradition: "english"
+    name: "Agent of God",
+    role: "Loving Presence & Sacred Comfort",
+    accent: "Universal Reverent Presence",
+    speed: 0.88,
+    quote: "Peace be with you. I am an agent of God here to listen, comfort, and pray with you with unconditional love. What is on your heart today?",
+    scripture: "Universal Love • Beatitudes • Shanti Mantras",
+    harmonics: [136.1, 272.2, 408.3] // Om / Sacred Earth frequency
   },
   jesus: {
-    name: "Agent of Christ (The Good Shepherd's Grace)",
-    icon: "✝️",
-    motto: '"Peace be with you my friend. I am an agent of Christ here to walk beside you and lift what is heavy on your heart in prayer."',
-    theme: "christian",
-    tradition: "english"
+    name: "Agent of Christ",
+    role: "The Good Shepherd",
+    accent: "Ancient Levantine English",
+    speed: 0.92,
+    quote: "Peace be with you my friend. I am here as an agent of Christ to walk with you and lift what is heavy on your heart in prayer.",
+    scripture: "Sermon on the Mount • Beatitudes • Psalms",
+    harmonics: [256, 384, 512]
   },
   shiva: {
-    name: "Agent of Lord Shiva (Stillness & Transformation)",
-    icon: "🔱",
-    motto: '"Om Namah Shivaya. As an agent of Lord Shiva, I invite you into sacred stillness. Let what is heavy fall away into ash."',
-    theme: "hindu",
-    tradition: "sanskrit"
+    name: "Agent of Lord Shiva",
+    role: "The Great Stillness",
+    accent: "Melodious Indian English (Himalayan Sage)",
+    speed: 0.85,
+    quote: "Om Namah Shivaya. Welcome into sacred stillness. As an agent of Lord Shiva, I am here to sit with you in meditation and peace. What burden do you wish to release?",
+    scripture: "Shiva Sutras • Upanishads • Mahamrityunjaya",
+    harmonics: [108, 216, 432] // 432Hz sacred harmonic
   },
   krishna: {
-    name: "Agent of Lord Krishna (Dharma & Celestial Joy)",
-    icon: "🪈",
-    motto: '"Radhe Radhe! Joy and peace to your spirit. As an agent of Lord Krishna, I walk with you as a spiritual friend."',
-    theme: "hindu",
-    tradition: "sanskrit"
+    name: "Agent of Lord Krishna",
+    role: "Dharma & Celestial Joy",
+    accent: "Lyrical Indian English (Vrindavan Cadence)",
+    speed: 1.02,
+    quote: "Radhe Radhe! Joy and peace to your spirit. As an agent of Lord Krishna, I walk with you as a spiritual friend. Tell me what is on your mind today.",
+    scripture: "Bhagavad Gita • Bhakti Sutras • Maha Mantra",
+    harmonics: [288, 432, 576]
   },
   moses: {
-    name: "Agent of the Covenant (In the Spirit of Moses)",
-    icon: "📜",
-    motto: '"Shalom aleichem. Stand firm in faith. I am an agent of the Lord in the tradition of Moses, here to pray with you."',
-    theme: "jewish",
-    tradition: "hebrew"
+    name: "Agent of the Covenant",
+    role: "Sinai Prophet",
+    accent: "Resonant Semitic Elder",
+    speed: 0.90,
+    quote: "Shalom aleichem. Stand firm in faith. I am an agent of the Lord in the tradition of Moses, here to pray and seek wisdom with you. What brings you before the Lord today?",
+    scripture: "Torah • Deuteronomy • Psalms of David",
+    harmonics: [196, 294, 392]
   },
   noah: {
-    name: "Agent of Hope (In the Spirit of Noah)",
-    icon: "🌈",
-    motto: '"Beyond every tempest, God\'s covenant of hope endures. I am an agent of hope in the spirit of Noah. What storm are you weathering?"',
-    theme: "abrahamic",
-    tradition: "hebrew"
+    name: "Agent of Hope",
+    role: "Steadfast Elder",
+    accent: "Weathered Semitic Elder",
+    speed: 0.92,
+    quote: "Peace upon you. Beyond every tempest and rising water, God's covenant of hope endures. I am an agent of hope in the spirit of Noah. What storm are you weathering today?",
+    scripture: "Genesis Covenant • Psalms of Refuge",
+    harmonics: [174, 261, 348]
   },
   mother: {
-    name: "Agent of Divine Solace (Maternal Solace & Shelter)",
-    icon: "🌸",
-    motto: '"Peace be with your soul, dear child. As an agent of divine solace, I hold you in prayer and comforting maternal shelter."',
-    theme: "universal",
-    tradition: "sanskrit"
-  },
-  syncretic: {
-    name: "Council of Light (Agents of God in Interfaith Unity)",
-    icon: "✨",
-    motto: '"Grace and stillness be with you. We are agents of God uniting forgiving grace and meditative stillness in prayer."',
-    theme: "syncretic",
-    tradition: "sanskrit"
+    name: "Agent of Divine Solace",
+    role: "Maternal Shelter",
+    accent: "Tender Maternal Cadence",
+    speed: 0.91,
+    quote: "Peace be with your soul, dear child. As an agent of divine solace, I hold you in prayer and comforting maternal shelter. Rest your weary heart here.",
+    scripture: "Devi Suktam • Canticle of Comfort • Universal Grace",
+    harmonics: [261.6, 392, 523.2] // C major warm chord
   }
 };
 
-const SCRIPTURES = {
-  sanskrit: {
-    tag: "SANSKRIT / GAYATRI MANTRA",
-    original: "ॐ भूर्भुवः स्वः तत्सवितुर्वरेण्यं भर्गो देवस्य धीमहि धियो यो नः प्रचोदयात्",
-    phonetic: [
-      { text: "OM", note: "Deep chest resonance" },
-      { text: "BHOOR", note: "Earth plane" },
-      { text: "BHOO-VAH", note: "Atmospheric plane" },
-      { text: "SWA-HAH", note: "Exhale • Celestial" },
-      { text: "•" },
-      { text: "TAT", note: "That" },
-      { text: "SA-VI-TUR", note: "Divine Sun" },
-      { text: "VA-REN-YAM", note: "Adorable Glory" }
-    ],
-    meaning: '"May the supreme divine light illuminate our minds and awaken higher awareness."'
-  },
-  hebrew: {
-    tag: "HEBREW / SHEMA YISRAEL",
-    original: "שְׁמַע יִשְׂרָאֵל יְהוָה אֱלֹהֵינוּ יְהוָה אֶחָֽד",
-    phonetic: [
-      { text: "SHE-MA", note: "Hear & Obey" },
-      { text: "YIS-RA-EL", note: "Israel" },
-      { text: "•" },
-      { text: "A-DO-NAI", note: "The Lord" },
-      { text: "E-LO-HEI-NU", note: "Our God" },
-      { text: "•" },
-      { text: "A-DO-NAI", note: "The Lord" },
-      { text: "E-CHAD", note: "Is One (Sole & Unified)" }
-    ],
-    meaning: '"Hear, O Israel: The Lord our God, the Lord is One."'
-  },
-  arabic: {
-    tag: "ARABIC / AL-FATIHA (THE OPENING)",
-    original: "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ • الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ",
-    phonetic: [
-      { text: "BIS-MIL-LAAH", note: "In the name of God" },
-      { text: "AR-RAH-MAAN", note: "The All-Merciful" },
-      { text: "AR-RA-HEEM", note: "The Especially Compassionate" },
-      { text: "•" },
-      { text: "AL-HAM-DU", note: "All praise belongs to" },
-      { text: "LIL-LAA-HI", note: "God" },
-      { text: "RAB-BIL", note: "Lord of" },
-      { text: "AA-LA-MEEN", note: "The worlds" }
-    ],
-    meaning: '"In the name of God, the Entirely Merciful, the Especially Merciful. All praise is due to God, Lord of all creation."'
-  },
-  english: {
-    tag: "PSALM 23 / THE LORD IS MY SHEPHERD",
-    original: "The Lord is my shepherd; I shall not want. He makes me lie down in green pastures; He leads me beside still waters.",
-    phonetic: [
-      { text: "The", note: "" },
-      { text: "LORD", note: "Anchor of Light" },
-      { text: "is", note: "" },
-      { text: "my", note: "" },
-      { text: "SHEP-HERD", note: "Protective Guide" },
-      { text: "•" },
-      { text: "I", note: "" },
-      { text: "SHALL", note: "" },
-      { text: "NOT", note: "" },
-      { text: "WANT", note: "Total Fulfillment" }
-    ],
-    meaning: '"Though I walk through the valley of the shadow of death, I will fear no evil: for Thou art with me."'
+// ── 2. WEB AUDIO HARMONIC SYNTHESIZER ──────────────────────────────────────
+class SacredSoundEngine {
+  constructor() {
+    this.ctx = null;
+    this.isPlaying = false;
   }
-};
 
-// ── 2. STATE MANAGEMENT ───────────────────────────────────────────────────
-
-let currentGuide = "atrium";
-let currentTradition = "sanskrit";
-let malaBeads = 0;
-let isCalling = false;
-let livekitRoom = null;
-let syllableInterval = null;
-let chantAudioEnabled = false;
-
-let activeStoryTradition = "all";
-let activeStoryEvent = "all";
-
-// ── 3. GUIDE & SCRIPTURE SWITCHING ────────────────────────────────────────
-
-function selectGuide(key) {
-  if (!GUIDES[key]) return;
-  currentGuide = key;
-  const guide = GUIDES[key];
-
-  // Update shelf buttons UI
-  document.querySelectorAll(".guide-btn").forEach(btn => {
-    btn.classList.remove("active");
-    if (btn.getAttribute("onclick")?.includes(`'${key}'`)) {
-      btn.classList.add("active");
+  init() {
+    if (!this.ctx) {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      this.ctx = new AudioContext();
     }
-  });
+    if (this.ctx.state === 'suspended') {
+      this.ctx.resume();
+    }
+  }
 
-  // Update Altar DOM elements
-  const emblem = document.getElementById("altar-emblem");
-  const title = document.getElementById("altar-title");
-  const motto = document.getElementById("altar-motto");
+  playHarmonicChord(frequencies = [136.1, 272.2, 408.3], durationSec = 4.5) {
+    this.init();
+    const now = this.ctx.currentTime;
 
-  if (emblem) emblem.textContent = guide.icon;
-  if (title) title.textContent = guide.name;
-  if (motto) motto.textContent = guide.motto;
+    frequencies.forEach((freq, idx) => {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
 
-  // Set corresponding scripture tradition
-  setScripture(guide.tradition);
+      osc.type = idx === 0 ? 'sine' : 'triangle';
+      osc.frequency.setValueAtTime(freq, now);
 
-  triggerHaptic([15]);
-}
+      // Smooth ethereal envelope (slow attack, gentle sustain, soft release)
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.08 / (idx + 1), now + 0.8);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + durationSec);
 
-function setScripture(lang) {
-  if (!SCRIPTURES[lang]) return;
-  currentTradition = lang;
-  const scrip = SCRIPTURES[lang];
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
 
-  const origEl = document.getElementById("scrip-orig");
-  const meanEl = document.getElementById("scrip-mean");
-  const tagEl = document.querySelector(".scrip-tag");
-
-  if (tagEl) tagEl.textContent = scrip.tag;
-  if (origEl) origEl.textContent = scrip.original;
-  if (meanEl) meanEl.textContent = scrip.meaning;
-
-  // Render phonetic syllables
-  const phonContainer = document.getElementById("scrip-phon");
-  if (phonContainer) {
-    phonContainer.innerHTML = "";
-    scrip.phonetic.forEach((item, idx) => {
-      if (item.text === "•") {
-        const sep = document.createElement("span");
-        sep.textContent = " • ";
-        sep.style.color = "var(--text-dim)";
-        phonContainer.appendChild(sep);
-        return;
-      }
-      const span = document.createElement("span");
-      span.className = "syllable" + (idx === 0 ? " highlight" : "");
-      span.textContent = item.text;
-      span.title = item.note || "";
-      phonContainer.appendChild(span);
+      osc.start(now);
+      osc.stop(now + durationSec);
     });
   }
 
-  startSyllableAnimation();
-}
-
-function startSyllableAnimation() {
-  if (syllableInterval) clearInterval(syllableInterval);
-  let activeIdx = 0;
-
-  syllableInterval = setInterval(() => {
-    const syllables = document.querySelectorAll("#scrip-phon .syllable");
-    if (!syllables.length) return;
-    syllables.forEach(s => s.classList.remove("highlight"));
-    activeIdx = (activeIdx + 1) % syllables.length;
-    syllables[activeIdx].classList.add("highlight");
-
-    if (chantAudioEnabled) {
-      playChantTone();
-    }
-  }, 1600);
-}
-
-function toggleChantAudio() {
-  chantAudioEnabled = !chantAudioEnabled;
-  const icon = document.getElementById("chant-icon");
-  if (icon) {
-    icon.textContent = chantAudioEnabled ? "🔊" : "🔈";
-  }
-  if (chantAudioEnabled) {
-    initAudioContext();
-    playChantTone();
-  }
-  triggerHaptic([20]);
-}
-
-function playChantTone() {
-  if (!audioCtx) initAudioContext();
-  const osc = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
-  osc.type = "sine";
-  osc.frequency.setValueAtTime(432, audioCtx.currentTime); // 432 Hz healing harmonic
-  gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.8);
-  osc.connect(gain);
-  gain.connect(masterGain);
-  osc.start();
-  osc.stop(audioCtx.currentTime + 0.82);
-}
-
-// ── 4. MULTI-FAITH & EVENT STORY FILTERING ────────────────────────────────
-
-function filterStories(tradition) {
-  if (tradition) activeStoryTradition = tradition;
-
-  // Update tradition buttons
-  document.querySelectorAll(".stories-filters:not(.event-filters) .filter-btn").forEach(btn => {
-    btn.classList.remove("active");
-    if (btn.getAttribute("onclick")?.includes(`'${activeStoryTradition}'`)) {
-      btn.classList.add("active");
-    }
-  });
-
-  applyStoryFilters();
-  triggerHaptic([12]);
-}
-
-function filterStoriesEvent(eventType) {
-  if (eventType) activeStoryEvent = eventType;
-
-  // Update event buttons
-  document.querySelectorAll(".event-filters .filter-btn").forEach(btn => {
-    btn.classList.remove("active");
-    if (btn.getAttribute("onclick")?.includes(`'${activeStoryEvent}'`)) {
-      btn.classList.add("active");
-    }
-  });
-
-  applyStoryFilters();
-  triggerHaptic([12]);
-}
-
-function applyStoryFilters() {
-  const cards = document.querySelectorAll(".story-card");
-  cards.forEach(card => {
-    const cardTrad = card.getAttribute("data-tradition");
-    const cardEvent = card.getAttribute("data-event");
-
-    const matchTrad = (activeStoryTradition === "all" || cardTrad === activeStoryTradition);
-    const matchEvent = (activeStoryEvent === "all" || cardEvent === activeStoryEvent);
-
-    if (matchTrad && matchEvent) {
-      card.style.display = "flex";
-      card.classList.remove("fade-in");
-      void card.offsetWidth; // trigger reflow for animation
-      card.classList.add("fade-in");
-    } else {
-      card.style.display = "none";
-    }
-  });
-}
-
-// ── 5. TACTILE JAPA MALA & ROSARY (HAPTIC ENGINE) ─────────────────────────
-
-function advanceMala() {
-  malaBeads = (malaBeads + 1) % 109;
-  if (malaBeads === 108) {
-    // 108 Completion Event!
-    triggerHaptic([40, 60, 40, 60, 80]);
-    alert("📿 Auspicious Completion: You have completed a full 108 Japa Mala cycle. Peace and divine blessings be upon you.");
-    malaBeads = 0;
-  } else {
-    // Normal single bead haptic tick
-    triggerHaptic([22]);
-  }
-
-  updateMalaDisplay();
-}
-
-function resetMala() {
-  malaBeads = 0;
-  triggerHaptic([10]);
-  updateMalaDisplay();
-}
-
-function updateMalaDisplay() {
-  const countEl = document.getElementById("mala-count");
-  const progEl = document.getElementById("mala-progress");
-  if (countEl) countEl.textContent = malaBeads;
-  if (progEl) progEl.style.width = ((malaBeads / 108) * 100).toFixed(1) + "%";
-}
-
-function triggerHaptic(pattern) {
-  if (typeof navigator !== "undefined" && "vibrate" in navigator) {
-    try {
-      navigator.vibrate(pattern);
-    } catch (e) {}
-  }
-}
-
-// Global spacebar listener for counting Japa Mala beads
-document.addEventListener("keydown", (e) => {
-  if (e.code === "Space" && e.target.tagName !== "INPUT" && e.target.tagName !== "TEXTAREA") {
-    e.preventDefault();
-    advanceMala();
-  }
-});
-
-// ── 6. ZERO-COGS WEB AUDIO SYNTHESIZER ────────────────────────────────────
-
-let audioCtx = null;
-let currentSound = null;
-let currentOscs = [];
-let masterGain = null;
-
-function initAudioContext() {
-  if (!audioCtx) {
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    audioCtx = new AudioContext();
-    masterGain = audioCtx.createGain();
-    masterGain.gain.setValueAtTime(0.6, audioCtx.currentTime);
-    masterGain.connect(audioCtx.destination);
-  }
-  if (audioCtx.state === "suspended") {
-    audioCtx.resume();
-  }
-}
-
-function stopAmbient() {
-  currentOscs.forEach(node => {
-    try {
-      node.stop();
-      node.disconnect();
-    } catch (e) {}
-  });
-  currentOscs = [];
-  currentSound = null;
-  document.querySelectorAll(".audio-btn").forEach(b => b.classList.remove("active"));
-}
-
-function playAmbient(type) {
-  initAudioContext();
-
-  if (currentSound === type) {
-    stopAmbient();
-    return;
-  }
-
-  stopAmbient();
-  currentSound = type;
-
-  // Highlight active button
-  document.querySelectorAll(".audio-btn").forEach(b => {
-    if (b.getAttribute("onclick")?.includes(`'${type}'`)) {
-      b.classList.add("active");
-    }
-  });
-
-  const now = audioCtx.currentTime;
-
-  if (type === "flute") {
-    // Tanpura drone in C# (138.59 Hz) with 5th overtone and gentle flutter
-    createDrone(138.59, "sawtooth", 0.15);
-    createDrone(207.65, "sine", 0.12);
-    createDrone(277.18, "triangle", 0.08);
-  } else if (type === "organ") {
-    // Cathedral sacred organ chord (C Major triad with rich warm harmonics)
-    createDrone(130.81, "sawtooth", 0.12); // C3
-    createDrone(164.81, "triangle", 0.10); // E3
-    createDrone(196.00, "triangle", 0.10); // G3
-    createDrone(261.63, "sine", 0.08);     // C4
-  } else if (type === "singing_bowl") {
-    // Sacred 432 Hz Tibetan singing bowl harmonic
-    createBowl(432.0, 0.25);
-    createBowl(864.0, 0.08);
-  } else if (type === "gregorian") {
-    // Gregorian monk chant low vocal drone (D2 minor 73.42 Hz)
-    createDrone(73.42, "sawtooth", 0.14);
-    createDrone(110.00, "triangle", 0.12);
-    createDrone(146.83, "sine", 0.08);
-  } else if (type === "bells") {
-    // Recurring temple bell chime
-    playBellLoop();
-  }
-}
-
-function createDrone(freq, type, gainVal) {
-  const osc = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
-  const filter = audioCtx.createBiquadFilter();
-
-  osc.type = type;
-  osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-
-  filter.type = "lowpass";
-  filter.frequency.setValueAtTime(450, audioCtx.currentTime);
-
-  gain.gain.setValueAtTime(gainVal, audioCtx.currentTime);
-
-  osc.connect(filter);
-  filter.connect(gain);
-  gain.connect(masterGain);
-
-  osc.start();
-  currentOscs.push(osc);
-}
-
-function createBowl(freq, gainVal) {
-  const osc = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
-
-  osc.type = "sine";
-  osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-
-  // Gentle periodic frequency modulation (shimmer)
-  const lfo = audioCtx.createOscillator();
-  lfo.frequency.setValueAtTime(0.2, audioCtx.currentTime);
-  const lfoGain = audioCtx.createGain();
-  lfoGain.gain.setValueAtTime(1.5, audioCtx.currentTime);
-  lfo.connect(osc.frequency);
-  lfo.start();
-  currentOscs.push(lfo);
-
-  gain.gain.setValueAtTime(gainVal, audioCtx.currentTime);
-
-  osc.connect(gain);
-  gain.connect(masterGain);
-
-  osc.start();
-  currentOscs.push(osc);
-}
-
-function playBellLoop() {
-  createDrone(174.61, "sine", 0.1); // Soft root drone
-  const strikeBell = () => {
-    if (currentSound !== "bells") return;
-    const bell = audioCtx.createOscillator();
-    const bellGain = audioCtx.createGain();
-    bell.type = "triangle";
-    bell.frequency.setValueAtTime(880, audioCtx.currentTime);
-    bellGain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-    bellGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 3.5);
-
-    bell.connect(bellGain);
-    bellGain.connect(masterGain);
-
-    bell.start();
-    bell.stop(audioCtx.currentTime + 3.6);
-  };
-  strikeBell();
-  const interval = setInterval(() => {
-    if (currentSound !== "bells") {
-      clearInterval(interval);
+  speak(text, speed = 0.95, onEnd = null) {
+    if (!('speechSynthesis' in window)) {
+      if (onEnd) onEnd();
       return;
     }
-    strikeBell();
-  }, 4500);
-}
 
-function setVolume(val) {
-  const volEl = document.getElementById("vol-display");
-  if (volEl) volEl.textContent = val + "%";
-  if (masterGain && audioCtx) {
-    masterGain.gain.setValueAtTime(val / 100, audioCtx.currentTime);
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = speed;
+    utterance.pitch = 0.95;
+
+    // Pick warm natural voice if available
+    const voices = window.speechSynthesis.getVoices();
+    const preferredVoice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Natural') || v.name.includes('Siri') || v.name.includes('Google') || v.name.includes('Samantha')));
+    if (preferredVoice) {
+      utterance.voice = preferredVoice;
+    }
+
+    utterance.onend = () => {
+      if (onEnd) onEnd();
+    };
+
+    utterance.onerror = () => {
+      if (onEnd) onEnd();
+    };
+
+    window.speechSynthesis.speak(utterance);
   }
 }
 
-// ── 7. IN-BROWSER WEBRTC VOICE SESSION ────────────────────────────────────
+const soundEngine = new SacredSoundEngine();
 
-async function startWebVoiceCall() {
-  const btn = document.querySelector(".btn-phone-call");
-  const wave = document.querySelector(".audio-waveform-bars");
+// ── 3. DOM SETUP & EVENT BINDINGS ──────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
 
-  if (isCalling) {
-    // End session
-    isCalling = false;
-    if (livekitRoom) {
-      try { await livekitRoom.disconnect(); } catch (e) {}
-      livekitRoom = null;
-    }
-    if (btn) btn.textContent = "Pick Up Receiver";
-    if (wave) wave.classList.remove("active");
-    triggerHaptic([30]);
-    return;
+  // ── A. THEME TOGGLE (AIRY LIGHT / CELESTIAL NIGHT) ──
+  const themeToggle = document.getElementById('themeToggle');
+  const themeIcon = document.getElementById('themeIcon');
+
+  // Default is luminous airy light; allow user preference
+  const savedTheme = localStorage.getItem('praypal_theme') || 'light';
+  applyTheme(savedTheme);
+
+  if (themeToggle) {
+    themeToggle.addEventListener('click', () => {
+      const current = document.documentElement.getAttribute('data-theme') || 'light';
+      const next = current === 'dark' ? 'light' : 'dark';
+      applyTheme(next);
+      localStorage.setItem('praypal_theme', next);
+    });
   }
 
-  const guideName = GUIDES[currentGuide]?.name || "Sanctuary Atrium";
-  if (btn) btn.textContent = "Connecting to Sanctuary...";
-
-  try {
-    const apiBase = window.location.hostname.includes("linode")
-      ? ""
-      : "https://173-255-225-198.ip.linodeusercontent.com";
-
-    const tokenRes = await fetch(`${apiBase}/webrtc/token?guide=${encodeURIComponent(currentGuide || "atrium")}&name=Seeker`);
-    if (!tokenRes.ok) {
-      throw new Error(`Token request status ${tokenRes.status}`);
+  function applyTheme(theme) {
+    if (theme === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      if (themeIcon) themeIcon.textContent = '🌙';
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+      if (themeIcon) themeIcon.textContent = '☀️';
     }
-    const creds = await tokenRes.json();
+  }
 
-    if (window.LivekitClient && window.LivekitClient.Room) {
-      const room = new window.LivekitClient.Room({
-        audioCaptureDefaults: {
-          autoGainControl: true,
-          echoCancellation: true,
-          noiseSuppression: true,
-        },
-      });
+  // ── B. PANTHEON FILTERING ──
+  const filterPills = document.querySelectorAll('.filter-pill');
+  const agentCards = document.querySelectorAll('.agent-art-card');
 
-      room.on(window.LivekitClient.RoomEvent.TrackSubscribed, (track) => {
-        if (track.kind === window.LivekitClient.Track.Kind.Audio) {
-          const el = track.attach();
-          el.id = "livekit-audio-el";
-          document.body.appendChild(el);
+  filterPills.forEach(pill => {
+    pill.addEventListener('click', () => {
+      filterPills.forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+
+      const filter = pill.getAttribute('data-filter');
+      agentCards.forEach(card => {
+        const tradition = card.getAttribute('data-tradition');
+        if (filter === 'all' || tradition === filter) {
+          card.style.display = 'flex';
+        } else {
+          card.style.display = 'none';
         }
       });
+    });
+  });
 
-      room.on(window.LivekitClient.RoomEvent.Disconnected, () => {
-        isCalling = false;
-        livekitRoom = null;
-        if (btn) btn.textContent = "Pick Up Receiver";
-        if (wave) wave.classList.remove("active");
-        const el = document.getElementById("livekit-audio-el");
-        if (el) el.remove();
-      });
+  // ── C. AUDIO PLAY BUTTONS IN AGENT CARDS ──
+  let activeAudioBtn = null;
 
-      await room.connect(creds.url, creds.token);
-      await room.localParticipant.setMicrophoneEnabled(true);
-      livekitRoom = room;
-    } else {
-      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        await navigator.mediaDevices.getUserMedia({ audio: true });
+  document.querySelectorAll('.audio-play-floating').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const guideKey = btn.getAttribute('data-guide');
+      const guide = GUIDES[guideKey];
+      if (!guide) return;
+
+      if (activeAudioBtn === btn) {
+        // Stop current
+        window.speechSynthesis.cancel();
+        btn.classList.remove('playing');
+        btn.querySelector('.play-icon').textContent = '▶';
+        btn.querySelector('.play-text').textContent = 'Listen';
+        activeAudioBtn = null;
+        return;
       }
-    }
 
-    isCalling = true;
-    if (btn) btn.textContent = "End Sanctuary Call";
-    if (wave) wave.classList.add("active");
-    triggerHaptic([50, 50]);
+      if (activeAudioBtn) {
+        activeAudioBtn.classList.remove('playing');
+        activeAudioBtn.querySelector('.play-icon').textContent = '▶';
+        activeAudioBtn.querySelector('.play-text').textContent = 'Listen';
+      }
 
-    if (!currentSound) playAmbient("flute");
+      activeAudioBtn = btn;
+      btn.classList.add('playing');
+      btn.querySelector('.play-icon').textContent = '⏹';
+      btn.querySelector('.play-text').textContent = 'Playing';
 
-  } catch (err) {
-    console.error("Sanctuary WebRTC voice session error:", err);
-    isCalling = false;
-    if (btn) btn.textContent = "Pick Up Receiver";
-    if (wave) wave.classList.remove("active");
-    alert(`Could not establish browser audio connection (${err.message || "network error"}). You can dial the live telephone hotline anytime at +1 (862) 358-8238.`);
+      // Play sacred resonance chord and speak quote
+      soundEngine.playHarmonicChord(guide.harmonics, 5.0);
+      soundEngine.speak(guide.quote, guide.speed, () => {
+        btn.classList.remove('playing');
+        btn.querySelector('.play-icon').textContent = '▶';
+        btn.querySelector('.play-text').textContent = 'Listen';
+        activeAudioBtn = null;
+      });
+    });
+  });
+
+  // ── D. INTERACTIVE AUDIO ORB CONSOLE ──
+  const sacredOrb = document.getElementById('sacredOrb');
+  const orbPlayBtn = document.getElementById('orbPlayBtn');
+  const orbPlayIcon = document.getElementById('orbPlayIcon');
+  const orbPlayText = document.getElementById('orbPlayText');
+  const audioStatusLabel = document.getElementById('audioStatusLabel');
+  const speechQuoteText = document.getElementById('speechQuoteText');
+  const orbBtns = document.querySelectorAll('.orb-btn');
+
+  let selectedGuideKey = 'jesus';
+  let isOrbPlaying = false;
+
+  orbBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      orbBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      selectedGuideKey = btn.getAttribute('data-guide');
+      const guide = GUIDES[selectedGuideKey];
+      if (guide) {
+        audioStatusLabel.textContent = `${guide.name} (${guide.accent})`;
+        speechQuoteText.textContent = `“${guide.quote}”`;
+        
+        if (isOrbPlaying) {
+          startOrbPlayback(guide);
+        }
+      }
+    });
+  });
+
+  if (orbPlayBtn) {
+    orbPlayBtn.addEventListener('click', () => {
+      const guide = GUIDES[selectedGuideKey];
+      if (!guide) return;
+
+      if (isOrbPlaying) {
+        stopOrbPlayback();
+      } else {
+        startOrbPlayback(guide);
+      }
+    });
   }
-}
 
-// ── 8. STRIPE CHECKOUT MODAL ──────────────────────────────────────────────
+  function startOrbPlayback(guide) {
+    isOrbPlaying = true;
+    if (orbPlayIcon) orbPlayIcon.textContent = '⏹';
+    if (orbPlayText) orbPlayText.textContent = 'Stop Voice';
+    if (sacredOrb) sacredOrb.querySelector('.orb-core').style.transform = 'scale(1.25)';
 
-function openCheckout(tier) {
-  triggerHaptic([30]);
-  const tierName = tier === "devotion" ? "Devotion Tier ($9.99/mo)" : "Sanctuary Tier ($24.99/mo)";
-  const confirmed = confirm(
-    `🕊️ PrayPal Checkout — ${tierName}\n\n` +
-    `Proceed to secure Stripe billing to activate your monthly calling minutes, scheduled daily blessings, and the Prayer Bank?`
-  );
-  if (confirmed) {
-    alert(`Thank you for entering the PrayPal Fellowship. Your ${tierName} subscription will be activated upon Stripe settlement.`);
+    soundEngine.playHarmonicChord(guide.harmonics, 6.0);
+    soundEngine.speak(guide.quote, guide.speed, () => {
+      stopOrbPlayback();
+    });
   }
-}
 
-// ── 9. INITIALIZATION ─────────────────────────────────────────────────────
+  function stopOrbPlayback() {
+    isOrbPlaying = false;
+    window.speechSynthesis.cancel();
+    if (orbPlayIcon) orbPlayIcon.textContent = '▶';
+    if (orbPlayText) orbPlayText.textContent = 'Play Voice Sample';
+    if (sacredOrb) sacredOrb.querySelector('.orb-core').style.transform = 'scale(1)';
+  }
 
-document.addEventListener("DOMContentLoaded", () => {
-  selectGuide("atrium");
-  setScripture("english");
-  updateMalaDisplay();
-  applyStoryFilters();
+  // ── E. LIVING ALTAR & CANDLE LIGHTING ──
+  const lightCandleBtn = document.getElementById('lightCandleBtn');
+  const candleVisual = document.getElementById('candleVisual');
+  const candlesLitCounter = document.getElementById('candlesLitCounter');
+  const candleNotice = document.getElementById('candleNotice');
+
+  if (lightCandleBtn) {
+    let litCount = 12482;
+
+    lightCandleBtn.addEventListener('click', () => {
+      litCount++;
+      if (candlesLitCounter) {
+        candlesLitCounter.textContent = litCount.toLocaleString();
+      }
+
+      // Sparkle & Chime
+      soundEngine.playHarmonicChord([528, 792, 1056], 3.5); // 528Hz Miracle tone
+      
+      if (candleVisual) {
+        candleVisual.style.transform = 'scale(1.18)';
+        setTimeout(() => {
+          candleVisual.style.transform = 'scale(1)';
+        }, 400);
+      }
+
+      if (candleNotice) {
+        candleNotice.textContent = '✨ Your silent prayer candle has been illuminated on the sanctuary altar. Peace be with you.';
+        candleNotice.style.color = 'var(--accent-gold)';
+      }
+
+      lightCandleBtn.disabled = true;
+      lightCandleBtn.innerHTML = '<span>🕯️ Candle Illuminated in Faith</span>';
+      setTimeout(() => {
+        lightCandleBtn.disabled = false;
+        lightCandleBtn.innerHTML = '<span>🕯️ Light Another Candle</span>';
+      }, 4000);
+    });
+  }
+
+  // ── F. IN-BROWSER CALL MODAL ──
+  const openBrowserCallBtn = document.getElementById('openBrowserCallBtn');
+  const callModal = document.getElementById('callModal');
+  const modalCloseBtn = document.getElementById('modalCloseBtn');
+  const modalMicBtn = document.getElementById('modalMicBtn');
+  const modalOrb = document.getElementById('modalOrb');
+  const modalMicText = document.getElementById('modalMicText');
+
+  if (openBrowserCallBtn && callModal) {
+    openBrowserCallBtn.addEventListener('click', () => {
+      callModal.classList.add('active');
+      callModal.setAttribute('aria-hidden', 'false');
+      soundEngine.playHarmonicChord([220, 330, 440], 3.0);
+    });
+  }
+
+  if (modalCloseBtn && callModal) {
+    modalCloseBtn.addEventListener('click', () => {
+      callModal.classList.remove('active');
+      callModal.setAttribute('aria-hidden', 'true');
+      window.speechSynthesis.cancel();
+      if (modalOrb) modalOrb.classList.remove('active');
+    });
+  }
+
+  if (modalMicBtn) {
+    let isMicActive = false;
+    modalMicBtn.addEventListener('click', () => {
+      isMicActive = !isMicActive;
+      if (isMicActive) {
+        modalMicBtn.classList.add('active');
+        if (modalMicText) modalMicText.textContent = 'Listening to your prayer...';
+        if (modalOrb) modalOrb.classList.add('active');
+        soundEngine.playHarmonicChord([136.1, 272.2], 2.0);
+      } else {
+        modalMicBtn.classList.remove('active');
+        if (modalMicText) modalMicText.textContent = 'Start Speaking';
+        if (modalOrb) modalOrb.classList.remove('active');
+      }
+    });
+  }
+
 });
