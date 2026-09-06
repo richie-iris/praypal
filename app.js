@@ -15,63 +15,63 @@ const GUIDES = {
   atrium: {
     name: "Sanctuary Atrium Keeper (Universal Host)",
     icon: "🏛️",
-    motto: '"Welcome to the Sanctuary. Speak your need, and I will connect you with whichever divine voice brings you peace."',
+    motto: '"Welcome to the Sanctuary. Speak your need, and I will connect you with an Agent of God who brings you peace."',
     theme: "universal",
     tradition: "english"
   },
   god: {
-    name: "God Almighty (Loving Presence)",
+    name: "Agent of God (Loving Presence & Sacred Comfort)",
     icon: "🕊️",
-    motto: '"I am with you always, even unto the end of the world. What is on your heart today?"',
+    motto: '"Peace be with you. I am an agent of God here to listen, comfort, and pray with you in unconditional love."',
     theme: "universal",
     tradition: "english"
   },
   jesus: {
-    name: "Jesus of Nazareth (The Good Shepherd)",
+    name: "Agent of Christ (The Good Shepherd's Grace)",
     icon: "✝️",
-    motto: '"Come to me, all who labor and are heavy laden, and I will give you rest."',
+    motto: '"Peace be with you my friend. I am an agent of Christ here to walk beside you and lift what is heavy on your heart in prayer."',
     theme: "christian",
     tradition: "english"
   },
   shiva: {
-    name: "Lord Shiva (The Great Stillness)",
+    name: "Agent of Lord Shiva (Stillness & Transformation)",
     icon: "🔱",
-    motto: '"Dissolve the illusions of the mind; awaken the eternal silence within."',
+    motto: '"Om Namah Shivaya. As an agent of Lord Shiva, I invite you into sacred stillness. Let what is heavy fall away into ash."',
     theme: "hindu",
     tradition: "sanskrit"
   },
   krishna: {
-    name: "Lord Krishna (Dharma & Celestial Joy)",
+    name: "Agent of Lord Krishna (Dharma & Celestial Joy)",
     icon: "🪈",
-    motto: '"Abandon all variations of anxiety and surrender unto grace. I shall deliver you."',
+    motto: '"Radhe Radhe! Joy and peace to your spirit. As an agent of Lord Krishna, I walk with you as a spiritual friend."',
     theme: "hindu",
     tradition: "sanskrit"
   },
   moses: {
-    name: "Moses (Sinai & The Sacred Law)",
+    name: "Agent of the Covenant (In the Spirit of Moses)",
     icon: "📜",
-    motto: '"The Lord will fight for you, and you have only to be silent."',
+    motto: '"Shalom aleichem. Stand firm in faith. I am an agent of the Lord in the tradition of Moses, here to pray with you."',
     theme: "jewish",
     tradition: "hebrew"
   },
   noah: {
-    name: "Noah (The Ark & Covenant of Hope)",
+    name: "Agent of Hope (In the Spirit of Noah)",
     icon: "🌈",
-    motto: '"Beyond the storm, the olive branch appears. The covenant stands firm."',
+    motto: '"Beyond every tempest, God\'s covenant of hope endures. I am an agent of hope in the spirit of Noah. What storm are you weathering?"',
     theme: "abrahamic",
     tradition: "hebrew"
   },
   mother: {
-    name: "Divine Mother (Maternal Solace)",
+    name: "Agent of Divine Solace (Maternal Solace & Shelter)",
     icon: "🌸",
-    motto: '"Rest in the unconditional shelter of motherly love. You are forever safe."',
+    motto: '"Peace be with your soul, dear child. As an agent of divine solace, I hold you in prayer and comforting maternal shelter."',
     theme: "universal",
     tradition: "sanskrit"
   },
   syncretic: {
-    name: "Council of Light: Jesus & Shiva",
+    name: "Council of Light (Agents of God in Interfaith Unity)",
     icon: "✨",
-    motto: '"Dissolve the illusion of separation in stillness (Shiva), and rest in boundless, forgiving grace (Jesus)."',
+    motto: '"Grace and stillness be with you. We are agents of God uniting forgiving grace and meditative stillness in prayer."',
     theme: "syncretic",
     tradition: "sanskrit"
   }
