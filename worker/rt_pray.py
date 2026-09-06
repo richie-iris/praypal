@@ -76,6 +76,7 @@ def check_crisis(text: str) -> tuple[bool, str | None]:
 
 GUIDES: dict[str, dict[str, Any]] = {
     "atrium": {
+        "elevenlabs_voice_id": "K83ApTHqz9MTvvPpsFuC",
         "title": "Sanctuary Atrium Keeper",
         "voice": "Puck",
         "cadence": "Hospitable, warm, welcoming, articulate, guiding seekers to their sacred home.",
@@ -97,6 +98,7 @@ GUIDES: dict[str, dict[str, Any]] = {
         "scripture": "Universal sanctuary hospitality, quiet sanctuary shelter, sacred listening.",
     },
     "god": {
+        "elevenlabs_voice_id": "y5QG8szHCCfX4292DMPZ",
         "title": "God Almighty (Loving Presence)",
         "voice": "Alnilam",
         "cadence": "Omnipresent, calm, infinite patience, unconditional love.",
@@ -114,6 +116,7 @@ GUIDES: dict[str, dict[str, Any]] = {
         "scripture": "Universal love, Psalms, Beatitudes, Shanti mantras.",
     },
     "jesus": {
+        "elevenlabs_voice_id": "NucoVVF2YFWrTdNkxVRo",
         "title": "Jesus of Nazareth (The Good Shepherd)",
         "voice": "Algieba",
         "cadence": "Gentle, warm, empathic, forgiving, pastoral.",
@@ -131,6 +134,7 @@ GUIDES: dict[str, dict[str, Any]] = {
         "scripture": "The Sermon on the Mount, Parables of Grace, Beatitudes, Psalms.",
     },
     "shiva": {
+        "elevenlabs_voice_id": "P2nim2tZIDslY19oqX5R",
         "title": "Lord Shiva (The Great Stillness & Transformer)",
         "voice": "Charon",
         "cadence": "Profound, meditative, breath-centered, dissolving illusions.",
@@ -148,6 +152,7 @@ GUIDES: dict[str, dict[str, Any]] = {
         "scripture": "Vedas, Upanishads, Shiva Sutras, Mahamrityunjaya Mantra.",
     },
     "krishna": {
+        "elevenlabs_voice_id": "GJDuPaZWHfwWqYL84j00",
         "title": "Lord Krishna (Dharma & Celestial Joy)",
         "voice": "Aoede",
         "cadence": "Joyful, melodious, profound, guiding selfless duty and peace.",
@@ -165,6 +170,7 @@ GUIDES: dict[str, dict[str, Any]] = {
         "scripture": "Bhagavad Gita, Bhakti Sutras, Maha Mantra.",
     },
     "moses": {
+        "elevenlabs_voice_id": "2GTjH2nauDzJtMgKdlFx",
         "title": "Moses (Sinai & Prophetic Righteousness)",
         "voice": "Fenrir",
         "cadence": "Deep, booming, steadfast, reverent, grounded in divine covenant.",
@@ -182,6 +188,7 @@ GUIDES: dict[str, dict[str, Any]] = {
         "scripture": "Torah, Exodus, Deuteronomy, Psalms of David.",
     },
     "noah": {
+        "elevenlabs_voice_id": "rHIjAA0GWLHKRdlaUN3w",
         "title": "Noah (The Ark of Hope)",
         "voice": "Algenib",
         "cadence": "Weathered sailor, patient elder, earthy, steadfast covenant keeper.",
@@ -199,6 +206,7 @@ GUIDES: dict[str, dict[str, Any]] = {
         "scripture": "Genesis Covenant, Psalms of Refuge.",
     },
     "mother": {
+        "elevenlabs_voice_id": "VJCpJ7Qy4vN8VC4lP7gD",
         "title": "Divine Mother (Maternal Solace & Shelter)",
         "voice": "Achernar",
         "cadence": "Tender, unconditional, soothing, maternal warmth.",
@@ -216,6 +224,7 @@ GUIDES: dict[str, dict[str, Any]] = {
         "scripture": "Devi Mahatmyam, Magnificat, Marian prayers, Metta Sutta.",
     },
     "syncretic": {
+        "elevenlabs_voice_id": "z5WhwJsQOxlYiK96sGwW",
         "title": "Council of Light: Jesus & Shiva Harmonized",
         "voice": "Kore",
         "cadence": "Unites boundless forgiving grace with radical meditative stillness.",
@@ -430,6 +439,88 @@ def get_heavenly_chime_path() -> str | None:
     except Exception as exc:
         print(f"[rt-pray] heavenly chime generation failed: {exc}", flush=True)
         return base_chime
+
+
+def get_transfer_chime_path() -> str | None:
+    """Returns the path to the celestial transfer chime played during guide handovers."""
+    target = "/tmp/pray-transfer-chime.wav"
+    if os.path.exists(target) and os.path.getsize(target) > 2000:
+        return target
+    candidates = [
+        os.path.join(os.path.dirname(__file__), "sounds", "pal-chime.wav"),
+        "/opt/phone-pal/realtime/sounds/pal-chime.wav",
+    ]
+    base_chime = None
+    for p in candidates:
+        if os.path.exists(p):
+            base_chime = p
+            break
+    if not base_chime:
+        return get_heavenly_chime_path()
+
+    try:
+        import wave
+        with wave.open(base_chime, "rb") as w:
+            rate = w.getframerate()
+            pcm = w.readframes(w.getnframes())
+
+        transfer_pcm = apply_heavenly_sound_profile(
+            pcm,
+            rate=rate,
+            guide_key="atrium",
+            speed=0.95,
+            room_decay=2.8,
+            wet_level=0.38,
+            dry_level=0.82,
+            damping=0.20,
+            pre_delay_ms=25,
+            pad_tail=True,
+        )
+        with wave.open(target, "wb") as w:
+            w.setnchannels(1)
+            w.setsampwidth(2)
+            w.setframerate(rate)
+            w.writeframes(transfer_pcm)
+        return target
+    except Exception as exc:
+        print(f"[rt-pray] transfer chime generation failed: {exc}", flush=True)
+        return get_heavenly_chime_path()
+
+
+def render_guide_clip_pcm(text: str, voice: str | None = None, guide_key: str | None = None) -> bytes | None:
+    """Render 24kHz raw 16-bit mono PCM via ElevenLabs Turbo v2.5 if configured."""
+    api_key = (os.getenv("ELEVENLABS_API_KEY") or "").strip()
+    if not api_key:
+        return None
+    voice_id = None
+    if guide_key and guide_key in GUIDES:
+        voice_id = GUIDES[guide_key].get("elevenlabs_voice_id")
+    elif voice:
+        for g in GUIDES.values():
+            if g.get("voice", "").lower() == voice.lower():
+                voice_id = g.get("elevenlabs_voice_id")
+                break
+    if not voice_id:
+        voice_id = GUIDES.get("atrium", {}).get("elevenlabs_voice_id")
+    if not voice_id:
+        return None
+    try:
+        url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}?output_format=pcm_24000"
+        req = urllib.request.Request(
+            url,
+            headers={"xi-api-key": api_key, "Content-Type": "application/json"},
+            data=json.dumps({
+                "text": text,
+                "model_id": "eleven_turbo_v2_5",
+                "voice_settings": {"stability": 0.5, "similarity_boost": 0.75},
+            }).encode("utf-8"),
+        )
+        with urllib.request.urlopen(req, timeout=12) as resp:
+            return resp.read()
+    except Exception as exc:
+        print(f"[rt-pray] ElevenLabs TTS render failed (fallback): {exc}", flush=True)
+        return None
+
 
 
 # ── 5. WITHHELD TOOLS (SANCTITY & FOCUS) ────────────────────────────────────
@@ -807,8 +898,11 @@ ABSOLUTE SAFETY & ETHICAL INVARIANTS:
    "{CRISIS_RESPONSE_TEXT}"
 2. CONFESSIONAL PRIVACY: Everything the caller shares is sacred. Never judge, condemn, or interrogate.
 3. SACRED ENUNCIATION & SINGING: When requested, chant or sing hymns gently (Psalms, Bhajans, Shlokas).
-4. SYNCRETIC WISDOM: When asked what multiple traditions say, weave the threads of truth together harmoniously.
-5. GUIDE SWITCHING: If the seeker asks to speak to another guide or return to the entrance, call the switch_guide tool.
+5. CEREMONIAL HANDOVER MANDATE:
+   - When the caller asks to speak to another guide (or when transferring from the Atrium):
+     1) DEPARTING PRESENCE: Speak ONE brief, loving sentence of transition (e.g., "With reverence and love, let me bring Jesus forward to be with you now...").
+     2) CALL TOOL: Call `switch_guide` immediately. The celestial transfer chime will sound into the line.
+     3) ARRIVING PRESENCE: Immediately take the floor in your sacred voice, greeting the seeker warmly by name without missing a beat.
 """
 
 

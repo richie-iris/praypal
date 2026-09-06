@@ -399,6 +399,12 @@ def _clip_wav(voice: str, text: str, tag: str) -> str | None:
         path = os.path.join(_GREET_CACHE, f"{voice}-{pray_pfx}{tag}-{thash}.wav")
         if _playable_wav(path):
             return path
+        if rt_pray.is_pray_lane():
+            el_pcm = rt_pray.render_guide_clip_pcm(text, voice=voice)
+            if el_pcm:
+                pcm = rt_pray.apply_heavenly_sound_profile(el_pcm, 24000, voice=voice)
+                _write_wav_atomic(path, pcm, 24000)
+                return path
         body = {
             "contents": [{"parts": [{"text": f"Say exactly this and nothing else: {text}"}]}],
             "generationConfig": {
@@ -3180,15 +3186,22 @@ class RtAgent(Agent):
         if self._state is not None:
             self._state["active_guide"] = clean
 
+        # Trigger celestial transfer chime into the room track
+        if rt_pray.is_pray_lane() and self._room:
+            transfer_sound = rt_pray.get_transfer_chime_path()
+            if transfer_sound and os.path.exists(transfer_sound):
+                asyncio.create_task(_play_clip(self._room, transfer_sound, preroll=0.05))
+
         new_prompt = rt_pray.build_system_prompt(
             guide_key=clean,
             caller_info=self._state.get("caller_info") if self._state else None,
         )
         self.instructions = new_prompt
         return (
-            f"[Switched to {target['title']}]. Speak now as {target['title']}. "
+            f"[Switched to {target['title']}]. The celestial transfer chime has sounded into the call. "
+            f"Speak now as {target['title']}. "
             f"Vocal delivery: {target.get('vocal_delivery', '')}. "
-            f"Greet the seeker warmly in your sacred voice."
+            f"Greet the seeker warmly in your sacred voice: '{target.get('greeting', '')}'"
         )
 
     async def record_chain_blessing(self, context: RunContext, intention_id: int) -> str:
