@@ -148,6 +148,7 @@ let currentGuide = "atrium";
 let currentTradition = "sanskrit";
 let malaBeads = 0;
 let isCalling = false;
+let livekitRoom = null;
 let syllableInterval = null;
 let chantAudioEnabled = false;
 
@@ -523,38 +524,85 @@ function setVolume(val) {
 
 // ── 7. IN-BROWSER WEBRTC VOICE SESSION ────────────────────────────────────
 
-function startWebVoiceCall() {
+async function startWebVoiceCall() {
   const btn = document.querySelector(".btn-phone-call");
   const wave = document.querySelector(".audio-waveform-bars");
 
   if (isCalling) {
     // End session
     isCalling = false;
+    if (livekitRoom) {
+      try { await livekitRoom.disconnect(); } catch (e) {}
+      livekitRoom = null;
+    }
     if (btn) btn.textContent = "Pick Up Receiver";
     if (wave) wave.classList.remove("active");
     triggerHaptic([30]);
     return;
   }
 
-  // Request microphone & connect
-  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-    navigator.mediaDevices.getUserMedia({ audio: true })
-      .then(stream => {
-        isCalling = true;
-        if (btn) btn.textContent = "End Sanctuary Call";
-        if (wave) wave.classList.add("active");
-        triggerHaptic([50, 50]);
+  const guideName = GUIDES[currentGuide]?.name || "Sanctuary Atrium";
+  if (btn) btn.textContent = "Connecting to Sanctuary...";
 
-        if (!currentSound) playAmbient("flute");
+  try {
+    const apiBase = window.location.hostname.includes("linode")
+      ? ""
+      : "https://173-255-225-198.ip.linodeusercontent.com";
 
-        const guideName = GUIDES[currentGuide]?.name || "Sanctuary Atrium";
-        alert(`🕊️ Connected to the Sanctuary. You are now speaking with ${guideName}. Speak freely; the line is open.`);
-      })
-      .catch(err => {
-        alert("Microphone permission was not granted. You can dial the live telephone hotline anytime at +1 (862) 358-8238.");
+    const tokenRes = await fetch(`${apiBase}/webrtc/token?guide=${encodeURIComponent(currentGuide || "atrium")}&name=Seeker`);
+    if (!tokenRes.ok) {
+      throw new Error(`Token request status ${tokenRes.status}`);
+    }
+    const creds = await tokenRes.json();
+
+    if (window.LivekitClient && window.LivekitClient.Room) {
+      const room = new window.LivekitClient.Room({
+        audioCaptureDefaults: {
+          autoGainControl: true,
+          echoCancellation: true,
+          noiseSuppression: true,
+        },
       });
-  } else {
-    alert("Web audio is supported on modern browsers. You can also dial the live line anytime at +1 (862) 358-8238.");
+
+      room.on(window.LivekitClient.RoomEvent.TrackSubscribed, (track) => {
+        if (track.kind === window.LivekitClient.Track.Kind.Audio) {
+          const el = track.attach();
+          el.id = "livekit-audio-el";
+          document.body.appendChild(el);
+        }
+      });
+
+      room.on(window.LivekitClient.RoomEvent.Disconnected, () => {
+        isCalling = false;
+        livekitRoom = null;
+        if (btn) btn.textContent = "Pick Up Receiver";
+        if (wave) wave.classList.remove("active");
+        const el = document.getElementById("livekit-audio-el");
+        if (el) el.remove();
+      });
+
+      await room.connect(creds.url, creds.token);
+      await room.localParticipant.setMicrophoneEnabled(true);
+      livekitRoom = room;
+    } else {
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        await navigator.mediaDevices.getUserMedia({ audio: true });
+      }
+    }
+
+    isCalling = true;
+    if (btn) btn.textContent = "End Sanctuary Call";
+    if (wave) wave.classList.add("active");
+    triggerHaptic([50, 50]);
+
+    if (!currentSound) playAmbient("flute");
+
+  } catch (err) {
+    console.error("Sanctuary WebRTC voice session error:", err);
+    isCalling = false;
+    if (btn) btn.textContent = "Pick Up Receiver";
+    if (wave) wave.classList.remove("active");
+    alert(`Could not establish browser audio connection (${err.message || "network error"}). You can dial the live telephone hotline anytime at +1 (862) 358-8238.`);
   }
 }
 
