@@ -82,7 +82,7 @@ services:
     depends_on: [livekit, redis]
 
   caddy:
-    image: caddy:2.11.4-alpine
+    image: caddy:2.11.7-alpine
     network_mode: host
     restart: unless-stopped
     logging: *default-logging
