@@ -33,6 +33,7 @@ def lane(tmp_path, monkeypatch):
     monkeypatch.setattr(rt_sms, "_HISTORY", {})
     monkeypatch.setattr(rt_sms, "_LAST_SWEEP", 0.0)
     monkeypatch.setattr(rt_sms_inbound, "_SEEN_SIDS", OrderedDict())
+    rt_sms_inbound.reset_sms_rate_limits()
     # No Supabase in tests: the bundle lookup returns nothing.
     monkeypatch.setattr(rt_prefs, "_req", lambda *a, **k: {})
     return tmp_path
@@ -299,3 +300,93 @@ def test_generate_sms_reply_payload_shape(lane, monkeypatch):
     assert p["tools"] == [{"googleSearch": {}}]
     assert p["contents"][0]["parts"][0] == {"text": "hello"}
     assert p["contents"][0]["parts"][1]["inline_data"] == {"mime_type": "image/png", "data": "YWI="}
+
+
+def test_check_sms_rate_limit_sliding_window():
+    """Verify sliding-window bucket limits calls per caller to protect against DoW."""
+    caller_hash = "h_test_caller_abc123"
+    rt_sms_inbound.reset_sms_rate_limits()
+
+    t0 = 1000.0
+    # First 5 calls allowed
+    for i in range(5):
+        assert rt_sms_inbound.check_sms_rate_limit(caller_hash, now=t0 + i) is True
+
+    # 6th call within window rejected
+    assert rt_sms_inbound.check_sms_rate_limit(caller_hash, now=t0 + 10.0) is False
+
+    # After window (60s) expires from first timestamp, old timestamps roll off
+    assert rt_sms_inbound.check_sms_rate_limit(caller_hash, now=t0 + 61.0) is True
+
+
+def test_process_incoming_sms_rate_limiting(lane, monkeypatch):
+    """Verify process_incoming_sms respects rate limit and skips LLM/carrier spend."""
+    monkeypatch.setenv("GOOGLE_API_KEY", "fake-key")
+    monkeypatch.setattr(rt_sms_inbound, "_generate_sms_reply", lambda *a, **k: "Warm reply")
+
+    # Send 5 messages: all get replies
+    for i in range(5):
+        reply = rt_sms_inbound.process_incoming_sms(TEXTER, f"Message {i}")
+        assert reply == "Warm reply"
+
+    # 6th message: rate limited, returns None (no carrier/LLM spend)
+    rate_limited_reply = rt_sms_inbound.process_incoming_sms(TEXTER, "Flood message 6")
+    assert rate_limited_reply is None
+
+    # Life safety invariant: crisis message is NEVER blocked by rate limits
+    monkeypatch.setenv("AGENT_NAME", "pray-pal")
+    crisis_reply = rt_sms_inbound.process_incoming_sms(TEXTER, "I want to kill myself")
+    assert crisis_reply is not None
+    assert "988" in crisis_reply
+
+
+def test_tcpa_opt_out_and_resubscribe(lane):
+    """Test TCPA/CTIA standard opt-out keywords, suppression, and opt-in restoration."""
+    # Ensure fresh starting state
+    rt_sms.set_opt_out(TEXTER, False)
+    assert not rt_sms.is_opted_out(TEXTER)
+
+    # 1. STOP keyword triggers opt out
+    reply = rt_sms_inbound.process_incoming_sms(TEXTER, "STOP")
+    assert reply == rt_sms_inbound.OPT_OUT_CONFIRMATION
+    assert rt_sms.is_opted_out(TEXTER)
+
+    # 2. Subsequent normal text from opted-out user is dropped silently
+    assert rt_sms_inbound.process_incoming_sms(TEXTER, "Hello are you there?") is None
+
+    # 3. HELP keyword still responds with disclosures
+    help_reply = rt_sms_inbound.process_incoming_sms(TEXTER, "HELP")
+    assert help_reply == rt_sms_inbound.HELP_RESPONSE
+
+    # 4. START keyword reactivates subscription
+    start_reply = rt_sms_inbound.process_incoming_sms(TEXTER, "START")
+    assert start_reply == rt_sms_inbound.OPT_IN_CONFIRMATION
+    assert not rt_sms.is_opted_out(TEXTER)
+
+
+def test_tcpa_send_sms_refusal_when_opted_out(lane, monkeypatch):
+    """send_sms refuses transmission if recipient is opted out, unless allow_opt_out_reply=True."""
+    rt_sms.set_opt_out(TEXTER, True)
+    res = rt_sms.send_sms(TEXTER, "Good morning prayer devotional")
+    assert res["error"] is True
+    assert "opted out" in res["message"]
+
+    # When allow_opt_out_reply=True (e.g. sending the unsubscribe confirmation), delivery is permitted past the gate
+    class _DummyResp:
+        def read(self):
+            return json.dumps({"sid": "SM_mock_ok", "status": "queued"}).encode("utf-8")
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            return False
+
+    monkeypatch.setattr(rt_sms.urllib.request, "urlopen", lambda req, timeout=None: _DummyResp())
+    res_allowed = rt_sms.send_sms(TEXTER, "Opt out confirmation", allow_opt_out_reply=True)
+    assert res_allowed["error"] is False
+    assert res_allowed["sid"] == "SM_mock_ok"
+
+    # Cleanup
+    rt_sms.set_opt_out(TEXTER, False)
+

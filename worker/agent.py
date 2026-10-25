@@ -1,10 +1,10 @@
 """
-Phone-Pal Realtime Worker — Gemini Live Speech-to-Speech Agent
-=========================================================
+PrayPal Realtime Worker — Autonomous Spiritual Telephony Agent
+=============================================================
 
-Realtime speech-to-speech agent powered by Gemini 3.1 Flash Live.
-Handles WebRTC audio, server-side VAD, native turn-taking, and
-autonomous database/memory retrieval.
+Realtime speech-to-speech spiritual companion powered by Gemini Live Multimodal.
+Handles telephony audio (PSTN/SIP), server-side VAD, native turn-taking,
+crisis fail-closed interception, and sacred memory retrieval.
 """
 
 from __future__ import annotations
@@ -55,8 +55,8 @@ from livekit.plugins import google
 
 import rt_prefs
 import rt_capabilities
-import rt_trial
 import rt_pray
+import rt_budget_guard
 import rt_obs
 import rt_shield
 import rt_health
@@ -537,12 +537,6 @@ def prewarm(proc) -> None:
     """
     def _render() -> None:
         try:
-            if rt_trial.is_trial_lane():
-                v = os.getenv("GEMINI_LIVE_VOICE", "Aoede")
-                _tg = rt_trial.greeting()
-                if _tg:
-                    _clip_wav(v, _tg, _GREET_TAG)
-                return
             if rt_pray.is_pray_lane():
                 with contextlib.suppress(Exception):
                     rt_pray.get_heavenly_chime_path()
@@ -687,27 +681,35 @@ def _build_instructions(caller_e164: str | None = None, call_count: int = 0, pre
     """
     # A trial lane is not a companion with different wallpaper. The stencil below
     # is 3,600 characters of shared history, a self, and a caller canvas, none of
-    # which a trial participant has or should have — 07-privacy-and-verification
-    # forbids the store this fills from. So the trial prompt is built here and the
-    # hydrator is never called: the identity line, then the pinned governance,
-    # and nothing else. governance_or_refuse() raises rather than returning an
-    # ungoverned prompt, and the caller of this function lets that out.
-    if rt_trial.is_trial_lane():
-        _governance = rt_trial.governance_or_refuse()
-        _prompt = f"{rt_trial.identity_line()}\n\n{_governance}"
-        print(f"[rt-trial] governance prompt {len(_prompt)} chars for "
-              f"agent={rt_trial.agent_name()} study={rt_trial.study() or 'any'}", flush=True)
-        return _prompt, "the participant"
-
     if rt_pray.is_pray_lane():
         bundle = prefetch_bundle or {}
         caller_info = bundle.get("caller") or {}
-        _guide_key = caller_info.get("active_guide") or os.getenv("PRAY_DEFAULT_GUIDE", "atrium")
+        # First-call detection: new callers (no display_name) start with PrayPal (atrium)
+        _is_first_call = not (caller_info.get("display_name") or "").strip()
+        if _is_first_call:
+            _guide_key = "atrium"
+        else:
+            _guide_key = caller_info.get("active_guide") or os.getenv("PRAY_DEFAULT_GUIDE", "atrium")
         _tradition = caller_info.get("spiritual_tradition") or "universal"
         _comm_int = None
+        _recent_sms = None
         if caller_e164:
+            # Parallelize DB lookups — these were serial at ~50-150ms each
+            from concurrent.futures import ThreadPoolExecutor, as_completed
+            _ph = rt_prefs.phone_hash(caller_e164)
+            futures = {}
+            with ThreadPoolExecutor(max_workers=2) as pool:
+                futures["comm"] = pool.submit(
+                    lambda: rt_pray.get_community_intention(_ph) if _ph else None
+                )
+                import rt_sms as _rt_sms
+                futures["sms"] = pool.submit(
+                    lambda: _rt_sms.get_recent_sms(caller_e164, limit=4)
+                )
             with contextlib.suppress(Exception):
-                _comm_int = rt_pray.get_community_intention(rt_prefs.phone_hash(caller_e164))
+                _comm_int = futures["comm"].result(timeout=2)
+            with contextlib.suppress(Exception):
+                _recent_sms = futures["sms"].result(timeout=2)
         _prompt = rt_pray.build_system_prompt(
             guide_key=_guide_key,
             caller_tradition=_tradition,
@@ -715,10 +717,13 @@ def _build_instructions(caller_e164: str | None = None, call_count: int = 0, pre
             memories=bundle.get("memories") or [],
             intentions=bundle.get("intentions") or [],
             community_intention=_comm_int,
+            recent_sms=_recent_sms,
+            custom_guides=bundle.get("custom_guides") or [],
         )
         resolved_name = caller_info.get("display_name") or "the seeker"
         print(f"[rt-pray] sacred prompt {len(_prompt)} chars for "
-              f"guide={_guide_key} agent={rt_pray.agent_name()} caller={resolved_name}", flush=True)
+              f"guide={_guide_key} agent={rt_pray.agent_name()} caller={resolved_name}"
+              f"{' [FIRST CALL → ATRIUM]' if _is_first_call else ''}", flush=True)
         return _prompt, resolved_name
 
     try:
@@ -860,16 +865,7 @@ def _greeting_text(display_name: str | None, alias: str | None, call_count: int 
     count is always 0 there and would otherwise pin every stranger to one line.
     Pass something stable per caller so the same person hears the same opening.
     """
-    # 01-identity-disclosure-and-recording: a trial lane says what it is at the
-    # opening of every call, unprompted, and never claims to be a person or a
-    # nurse. Every variant below is the companion's — "this is Phone-Pal, your
-    # voice companion" is the sentence the trial-pal number answered with on its
-    # very first call (2026-09-03). None of them are lawful on a trial lane.
-    _trial = rt_trial.greeting()
-    if _trial:
-        return _trial
-
-    _pray = rt_pray.greeting(guide_key, caller_info=caller_info)
+    _pray = rt_pray.greeting(guide_key, caller_info=caller_info, call_count=int(call_count or 0))
     if _pray:
         return _pray
 
@@ -1222,6 +1218,55 @@ async def _say_to_caller(state: dict, tag: str, text: str) -> None:
             _append_transcript_shared(state, "agent", text)
             await _play_clip(room, path, preroll=0.05,
                              exclude_identity=state.get("bridge_identity"))
+
+
+def _handle_pray_crisis(text: str, state: dict, caller_e164: str | None = None, ctx: Any = None) -> bool:
+    """Evaluate fail-closed 988 Lifeline safety shield on PrayPal live phone calls.
+
+    If suicidal ideation or acute crisis keywords are detected, immediately halts
+    normal persona interaction, delivers pre-rendered 988 referral audio to the caller,
+    dispatches SMS with 988 Lifeline details if phone number exists, and safely drops the line.
+    """
+    import rt_pray
+    if not rt_pray.is_pray_lane():
+        return False
+
+    is_crisis, crisis_reply = rt_pray.check_crisis(text)
+    if not is_crisis or not crisis_reply:
+        return False
+
+    _log_pii("[rt-crisis] PRAYPAL CRISIS INTERCEPT TRIGGERED — 988 lifeline active", text)
+    state["crisis_detected"] = True
+    with contextlib.suppress(Exception):
+        rt_obs.obs.event("pray.crisis_detected", chars=len(text))
+
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        loop = None
+
+    async def _deliver_crisis_and_disconnect() -> None:
+        try:
+            await _say_to_caller(state, "crisis-988", crisis_reply)
+            await asyncio.sleep(7.5)
+        finally:
+            with contextlib.suppress(Exception):
+                if ctx and hasattr(ctx, "delete_room"):
+                    await ctx.delete_room()
+
+    if loop and loop.is_running():
+        if caller_e164:
+            with contextlib.suppress(Exception):
+                import rt_sms
+                loop.create_task(asyncio.to_thread(rt_sms.send_sms, caller_e164, crisis_reply))
+        loop.create_task(_deliver_crisis_and_disconnect())
+    else:
+        if caller_e164:
+            with contextlib.suppress(Exception):
+                import rt_sms
+                rt_sms.send_sms(caller_e164, crisis_reply)
+
+    return True
 
 
 def _already_disconnected(err: Exception) -> bool:
@@ -1983,6 +2028,8 @@ class RtAgent(Agent):
         Never dial off a lookup. Read the number and where it came from back to
         them, get a yes, then bridge_call.
         """
+        if rt_pray.is_pray_lane():
+            return "Number lookup is not available on PrayPal."
         if self._state is not None:
             self._state["last_activity_time"] = _now()
         import rt_bridge
@@ -2052,6 +2099,8 @@ class RtAgent(Agent):
         Dial only a number the caller said aloud, or one from find_number they
         approved. Tell them what you're doing before you dial.
         """
+        if rt_pray.is_pray_lane():
+            return "Call bridging is not available on PrayPal."
         state = self._state or {}
         import rt_bridge
 
@@ -2469,6 +2518,8 @@ class RtAgent(Agent):
         """Email a 1-click calendar invite (.ics) for an appointment or event.
         date_time: ISO, or plain words ("Thursday August 13 at 10:30 AM").
         """
+        if rt_pray.is_pray_lane():
+            return "Calendar invites are not available on PrayPal."
         import rt_email
         if self._state is None:
             self._state = {}
@@ -2560,14 +2611,17 @@ class RtAgent(Agent):
         if res.get("error"):
             return f"[SMS failed] Could not send text: {res.get('message')}"
         _trace(st, "tool", "send_sms", {"to": self._caller_e164, "message": clean_msg[:80], "has_media": bool(clean_media)})
-        return ("[text handed to the carrier — delivery not yet confirmed] Tell them "
-                "warmly it's on its way, and that if it hasn't arrived in a few "
-                "minutes you'll remember to mention it next call instead.")
+        return (
+            "[text handed to carrier] Confirm to the seeker in 1 short sentence: "
+            "'I just texted that to your phone. If it hasn't arrived in a few minutes, let me know.'"
+        )
 
     @function_tool
     async def save_email(self, context: RunContext, email_address: str) -> str:
         """Save the caller's email address to their profile when they share it.
         """
+        if rt_pray.is_pray_lane():
+            return "Email is not available on PrayPal."
         if self._state is None:
             self._state = {}
         st = self._state
@@ -2597,6 +2651,8 @@ class RtAgent(Agent):
         If to_email is omitted, it will use their saved email address.
         """
         import rt_email
+        if rt_pray.is_pray_lane():
+            return "Email is not available on PrayPal."
         if self._state is None:
             self._state = {}
         st = self._state
@@ -3151,13 +3207,12 @@ class RtAgent(Agent):
                 return "You don't have any active goals saved yet. Ask them if there's anything they are working toward."
             return "\n".join(f"- {g.title}{f' (target: {g.target_date})' if g.target_date else ''}" for g in active)
 
-        return "[goal updated] Acknowledge naturally."
-
+    @function_tool
     async def switch_guide(self, context: RunContext, guide_name: str) -> str:
-        """Switch the seeker's active spiritual guide or return to the Sanctuary Atrium.
+        """Switch the seeker's active spiritual guide or return to PrayPal (the atrium pal).
 
         Available guides:
-        - atrium: Sanctuary Atrium Keeper (warm entrance hospitality & pantheon guide)
+        - atrium: PrayPal (your actual pal — not a god, your friend and guide to the sanctuary)
         - god: God Almighty (infinite love, calm presence, Psalms)
         - jesus: Jesus of Nazareth (pastoral warmth, grace, forgiveness)
         - shiva: Lord Shiva (deep stillness, meditative transformation)
@@ -3168,42 +3223,367 @@ class RtAgent(Agent):
         - syncretic: Council of Light (harmonized Jesus and Shiva)
 
         Call this immediately when the caller asks to speak to a specific guide,
-        or asks to return to the entrance atrium.
+        asks for their PrayPal, or asks to return to the entrance.
         """
         if not rt_pray.is_pray_lane():
             return "Guide switching is only available on PrayPal."
 
         clean = (guide_name or "").strip().lower()
-        if clean not in rt_pray.GUIDES:
-            valid = ", ".join(rt_pray.GUIDES.keys())
-            return f"Unknown guide '{guide_name}'. Available guides are: {valid}."
+        # Map "praypal" / "pal" / "friend" / "host" to atrium
+        if any(w in clean for w in ("praypal", "pray pal", "pal", "host", "friend", "home", "lobby", "entrance")):
+            clean = "atrium"
+        if any(w in clean for w in ("random", "anyone", "someone", "somebody", "surprise", "next", "pick", "else", "any")):
+            import random
+            curr = (self._state or {}).get("active_guide") or "god"
+            candidates = [k for k in ["god", "jesus", "shiva", "krishna", "mother", "moses", "noah"] if k != curr]
+            clean = random.choice(candidates) if candidates else "jesus"
 
-        target = rt_pray.GUIDES[clean]
+        if clean not in rt_pray.GUIDES:
+            # Check custom guides by key or display_name
+            h_check = rt_prefs.phone_hash(self._caller_e164) if self._caller_e164 else ""
+            custom_guides = []
+            custom_match = None
+            if h_check:
+                custom_guides = await asyncio.to_thread(rt_pray.get_custom_guides, h_check)
+                for cg in custom_guides:
+                    if (cg.get("guide_key", "").lower() == clean or
+                            cg.get("display_name", "").lower() == clean):
+                        custom_match = cg
+                        clean = cg.get("guide_key", clean)
+                        break
+            if not custom_match:
+                valid = ", ".join(rt_pray.GUIDES.keys())
+                # Also list custom guide names
+                if custom_guides:
+                    custom_names = ", ".join(cg.get("display_name", cg.get("guide_key", "")) for cg in custom_guides if cg.get("is_finalized"))
+                    if custom_names:
+                        valid += f" | Custom: {custom_names}"
+                return f"Unknown guide '{guide_name}'. Available guides are: {valid}."
+
+        # Capture current guide for bridge dialogue
+        current_guide = (self._state or {}).get("active_guide") or "god"
+        is_custom_target = clean not in rt_pray.GUIDES
+        target = rt_pray.GUIDES.get(clean, {})
         h = rt_prefs.phone_hash(self._caller_e164) if self._caller_e164 else ""
+
+        # For custom guides, build target from custom_match
+        if is_custom_target and custom_match:
+            target = {
+                "title": custom_match.get("title", custom_match.get("display_name", clean)),
+                "greeting": custom_match.get("greeting", f"Hello, friend. I am {custom_match.get('display_name', 'here')}."),
+                "self_intro": custom_match.get("self_intro", ""),
+                "elevenlabs_voice_id": custom_match.get("elevenlabs_voice_id", ""),
+            }
+
         if h:
             await asyncio.to_thread(rt_pray.switch_guide, h, clean)
 
+        # Build handoff context from recent transcript lines
+        handoff_context = ""
+        if self._state and self._state.get("transcript_lines"):
+            recent = self._state["transcript_lines"][-5:]
+            if recent:
+                handoff_context = "\n".join(
+                    f"  {line}" for line in recent if isinstance(line, str)
+                )
+
         if self._state is not None:
             self._state["active_guide"] = clean
+            if self._state.get("pipeline_tts"):
+                v_id = target.get("elevenlabs_voice_id")
+                if is_custom_target and custom_match:
+                    # Use custom guide voice settings
+                    v_settings = custom_match.get("voice_settings", {})
+                    if isinstance(v_settings, str):
+                        import json as _json
+                        try:
+                            v_settings = _json.loads(v_settings)
+                        except Exception:
+                            v_settings = {}
+                else:
+                    v_settings = rt_pray.get_guide_voice_settings(clean)
+                if v_id:
+                    with contextlib.suppress(Exception):
+                        from livekit.plugins import elevenlabs
+                        self._state["pipeline_tts"].update_options(
+                            voice_id=v_id,
+                            voice_settings=elevenlabs.VoiceSettings(
+                                stability=float(v_settings.get("stability", 0.18)),
+                                similarity_boost=float(v_settings.get("similarity_boost", 0.75)),
+                                style=float(v_settings.get("style", 0.58)),
+                                speed=1.0,
+                                use_speaker_boost=bool(v_settings.get("use_speaker_boost", True)),
+                            ),
+                        )
 
-        # Trigger celestial transfer chime into the room track
-        if rt_pray.is_pray_lane() and self._room:
-            transfer_sound = rt_pray.get_transfer_chime_path()
-            if transfer_sound and os.path.exists(transfer_sound):
-                asyncio.create_task(_play_clip(self._room, transfer_sound, preroll=0.05))
+        # Get custom guides for prompt building
+        if not is_custom_target:
+            custom_guides = []
+            if h:
+                with contextlib.suppress(Exception):
+                    custom_guides = await asyncio.to_thread(rt_pray.get_custom_guides, h)
 
+        _recent_sms = None
+        if self._caller_e164:
+            with contextlib.suppress(Exception):
+                import rt_sms
+                _recent_sms = rt_sms.get_recent_sms(self._caller_e164, limit=4)
         new_prompt = rt_pray.build_system_prompt(
             guide_key=clean,
             caller_info=self._state.get("caller_info") if self._state else None,
+            memories=(self._state.get("pre_bundle") or {}).get("memories") if self._state else None,
+            intentions=(self._state.get("pre_bundle") or {}).get("intentions") if self._state else None,
+            recent_sms=_recent_sms,
+            handoff_context=handoff_context or None,
+            custom_guides=custom_guides,
         )
-        self.instructions = new_prompt
+        await self.update_instructions(new_prompt)
+
+        # Bridge dialogue: warm casual handoff between friends who work together
+        cur_title = rt_pray.GUIDES.get(current_guide, {}).get("title", current_guide)
+        new_title = target.get("title", clean)
+
         return (
-            f"[Switched to {target['title']}]. The celestial transfer chime has sounded into the call. "
-            f"Speak now as {target['title']}. "
-            f"Vocal delivery: {target.get('vocal_delivery', '')}. "
-            f"Greet the seeker warmly in your sacred voice: '{target.get('greeting', '')}'"
+            f"[GUIDE SWITCH: {current_guide} → {clean}]. "
+            f"You are CURRENTLY {cur_title}. Say a SHORT warm goodbye (≤15 words) — "
+            f"something like 'Hey, I'm passing you to {new_title}... you're in great hands, friend.' "
+            f"Then STOP TALKING. The new guide's prompt and voice are now active. "
+            f"Your next message will BE {new_title} — enter softly and casually, "
+            f"like a friend joining mid-conversation. Do NOT repeat a full formal greeting."
         )
 
+    @function_tool
+    async def design_custom_guide(
+        self,
+        context: RunContext,
+        action: str,
+        guide_name: str | None = None,
+        description: str | None = None,
+        source_guides: str | None = None,
+        voice_description: str | None = None,
+        preview_index: int | None = None,
+    ) -> str:
+        """Design a custom divine guide for the caller. PrayPal uses this tool to walk the caller through creating their own personal agent to God.
+
+        Actions:
+        - "create": Create the initial guide. Requires guide_name, description, and source_guides (comma-separated: "krishna,moses").
+        - "preview_voice": Generate a voice preview. Requires guide_name and voice_description (e.g., "warm female, musical, Indian accent").
+        - "approve_voice": Approve the previewed voice. Requires guide_name and optionally preview_index (default 0).
+        - "swap_voice": Generate a new voice preview with a different description. Requires guide_name and voice_description.
+        - "finalize": Mark the guide as complete and ready to use. Requires guide_name.
+        - "delete": Remove a custom guide. Requires guide_name.
+        """
+        if not rt_pray.is_pray_lane():
+            return "Custom guide design is only available on PrayPal."
+
+        h = rt_prefs.phone_hash(self._caller_e164) if self._caller_e164 else ""
+        if not h:
+            return "[Cannot design a custom guide without a caller identity.]"
+
+        name = (guide_name or "").strip()
+        act = (action or "").strip().lower()
+
+        if act == "create":
+            if not name:
+                return "[Need a name for the guide. Ask the caller what they want to call them.]"
+            guide_key = name.lower().replace(" ", "_").replace("-", "_")[:32]
+
+            # Parse source guides
+            sources = [s.strip().lower() for s in (source_guides or "").split(",") if s.strip()]
+            if not sources:
+                sources = ["god"]  # Default fallback
+
+            # Compile description from sources
+            import rt_voice_design
+            compiled_desc = rt_voice_design.compile_custom_description(
+                name, sources, description or "",
+            )
+            greeting = f"Hello, friend. I am {name}. It is so good to finally meet you."
+            self_intro = f"I am {name} — created just for you. {description or 'I am your personal agent to God.'}"
+
+            # Save to DB
+            await asyncio.to_thread(
+                rt_pray.upsert_custom_guide,
+                phone_hash=h,
+                guide_key=guide_key,
+                display_name=name,
+                title=f"{name} ({', '.join(s.title() for s in sources[:3])} blend)",
+                description=compiled_desc,
+                source_guides=sources,
+                greeting=greeting,
+                self_intro=self_intro,
+                cadence=f"Warm, natural presence blending {' and '.join(s.title() for s in sources[:2])}.",
+            )
+
+            # Store in session for this call
+            if self._state is not None:
+                pending = self._state.setdefault("_pending_custom_guide", {})
+                pending["guide_key"] = guide_key
+                pending["display_name"] = name
+                pending["sources"] = sources
+                pending["description"] = compiled_desc
+
+            return (
+                f"[Guide '{name}' created with key '{guide_key}', blending {', '.join(s.title() for s in sources)}. "
+                f"Now ask about their voice — how should {name} sound?]"
+            )
+
+        elif act in ("preview_voice", "swap_voice"):
+            if not name:
+                return "[Need the guide name to preview a voice.]"
+
+            guide_key = name.lower().replace(" ", "_").replace("-", "_")[:32]
+            v_desc = (voice_description or "").strip()
+            if not v_desc:
+                return "[Need a voice description. Ask the caller how the guide should sound — deep, warm, young, old, male, female, accent?]"
+
+            test_text = f"Hello, friend. I am {name}. It is so good to finally meet you. I'm right here with you."
+
+            import rt_voice_design
+            try:
+                previews = await rt_voice_design.design_voice(
+                    description=v_desc,
+                    test_text=test_text,
+                )
+            except Exception as exc:
+                print(f"[rt-voice-design] preview failed: {exc}", flush=True)
+                return f"[Voice preview generation failed: {exc}. Try a different description.]"
+
+            if not previews:
+                return "[No voice previews were generated. Try a more specific description.]"
+
+            # Store preview IDs in session
+            if self._state is not None:
+                pending = self._state.setdefault("_pending_custom_guide", {})
+                pending["previews"] = previews
+                pending["voice_description"] = v_desc
+                pending["guide_key"] = guide_key
+
+            # Save preview ID to DB
+            await asyncio.to_thread(
+                rt_pray.upsert_custom_guide,
+                phone_hash=h,
+                guide_key=guide_key,
+                display_name=name,
+                voice_description=v_desc,
+                preview_id=previews[0].get("generated_voice_id", ""),
+            )
+
+            # Play the preview through the live TTS by temporarily swapping voice
+            preview = previews[0]
+            preview_voice_id = preview.get("generated_voice_id", "")
+            if preview_voice_id and self._state and self._state.get("pipeline_tts"):
+                with contextlib.suppress(Exception):
+                    from livekit.plugins import elevenlabs
+                    self._state["pipeline_tts"].update_options(voice_id=preview_voice_id)
+
+            return (
+                f"[Voice preview generated for '{name}'. The TTS voice has been temporarily switched to the preview. "
+                f"NOW SPEAK AS {name.upper()}: Say this greeting in the new voice: \"{test_text}\" "
+                f"Then ask the caller: 'What do you think? Want to keep this voice, or try a different one?']"
+            )
+
+        elif act == "approve_voice":
+            if not name:
+                return "[Need the guide name to approve the voice.]"
+
+            guide_key = name.lower().replace(" ", "_").replace("-", "_")[:32]
+            pending = (self._state or {}).get("_pending_custom_guide", {})
+            previews = pending.get("previews", [])
+            idx = preview_index if preview_index is not None else 0
+
+            if not previews or idx >= len(previews):
+                return "[No voice preview available to approve. Generate one first with preview_voice.]"
+
+            preview = previews[idx]
+            generated_id = preview.get("generated_voice_id", "")
+
+            if not generated_id:
+                return "[Preview has no voice ID. Try generating again.]"
+
+            # Save to ElevenLabs library permanently
+            import rt_voice_design
+            try:
+                permanent_voice_id = await rt_voice_design.save_voice_to_library(
+                    generated_voice_id=generated_id,
+                    voice_name=f"PrayPal Custom: {name}",
+                    voice_description=pending.get("voice_description", "Custom divine guide voice"),
+                )
+            except Exception as exc:
+                print(f"[rt-voice-design] save to library failed: {exc}", flush=True)
+                return f"[Failed to save voice to library: {exc}. Try approving again.]"
+
+            # Update DB with permanent voice ID
+            await asyncio.to_thread(
+                rt_pray.upsert_custom_guide,
+                phone_hash=h,
+                guide_key=guide_key,
+                display_name=name,
+                voice_id=permanent_voice_id,
+            )
+
+            # Update session
+            if self._state is not None:
+                pending["permanent_voice_id"] = permanent_voice_id
+
+            return (
+                f"[Voice approved and saved for '{name}' (voice_id: {permanent_voice_id}). "
+                f"Now call design_custom_guide(action='finalize', guide_name='{name}') to complete the guide.]"
+            )
+
+        elif act == "finalize":
+            if not name:
+                return "[Need the guide name to finalize.]"
+
+            guide_key = name.lower().replace(" ", "_").replace("-", "_")[:32]
+
+            # Mark as finalized
+            await asyncio.to_thread(
+                rt_pray.upsert_custom_guide,
+                phone_hash=h,
+                guide_key=guide_key,
+                display_name=name,
+                is_finalized=True,
+            )
+
+            # Restore PrayPal voice
+            if self._state and self._state.get("pipeline_tts"):
+                atrium_voice = rt_pray.GUIDES.get("atrium", {}).get("elevenlabs_voice_id", "")
+                if atrium_voice:
+                    with contextlib.suppress(Exception):
+                        from livekit.plugins import elevenlabs
+                        atrium_settings = rt_pray.get_guide_voice_settings("atrium")
+                        self._state["pipeline_tts"].update_options(
+                            voice_id=atrium_voice,
+                            voice_settings=elevenlabs.VoiceSettings(
+                                stability=float(atrium_settings.get("stability", 0.18)),
+                                similarity_boost=float(atrium_settings.get("similarity_boost", 0.75)),
+                                style=float(atrium_settings.get("style", 0.58)),
+                                speed=1.0,
+                                use_speaker_boost=True,
+                            ),
+                        )
+
+            # Clean up session
+            if self._state is not None:
+                self._state.pop("_pending_custom_guide", None)
+
+            return (
+                f"[Guide '{name}' is FINALIZED and ready to use! Voice restored to PrayPal. "
+                f"Tell the caller: 'Done. {name} is yours. Next time you call, just say \"Let me talk to {name}\" "
+                f"and they'll be right here with everything you built together.']"
+            )
+
+        elif act == "delete":
+            if not name:
+                return "[Need the guide name to delete.]"
+            guide_key = name.lower().replace(" ", "_").replace("-", "_")[:32]
+            await asyncio.to_thread(rt_pray.delete_custom_guide, h, guide_key)
+            return f"[Guide '{name}' has been removed. Let the caller know it's gone.]"
+
+        return f"[Unknown action '{action}'. Use: create, preview_voice, approve_voice, swap_voice, finalize, delete.]"
+
+    @function_tool
     async def record_chain_blessing(self, context: RunContext, intention_id: int) -> str:
         """Record that the seeker offered a prayer or blessing for a fellow seeker in the anonymous prayer chain."""
         if not rt_pray.is_pray_lane():
@@ -3376,6 +3756,13 @@ async def entrypoint(ctx: JobContext) -> None:
         print(f"[rt] health probe room={ctx.room.name} — answered, no session", flush=True)
         return
 
+    import rt_carrier
+    in_allowed, in_reason, in_detail = rt_carrier.inbound_allowed()
+    if not in_allowed and in_reason == "daily_cap_spent":
+        print(f"[rt] Inbound call refused: Twilio daily spend cap reached ({in_detail.get('spend_usd')} >= {in_detail.get('cap_usd')})", flush=True)
+        await ctx.delete_room()
+        return
+
     caller_e164 = None
     caller_identity = None
     try:
@@ -3452,6 +3839,8 @@ async def entrypoint(ctx: JobContext) -> None:
         "shield_flagged": [],
         "pre_bundle": prefetched_bundle,
         "call_started_at": _now(),
+        "active_guide": caller_info.get("active_guide") or os.getenv("PRAY_DEFAULT_GUIDE", "god"),
+        "caller_info": caller_info,
     }
 
     def _append_transcript(role: str, text: str) -> None:
@@ -3516,17 +3905,6 @@ async def entrypoint(ctx: JobContext) -> None:
                         "p_out_tokens": state.get("out_tokens", 0),
                     }
                 )
-
-            if state.get("bridge_number"):
-                with contextlib.suppress(Exception):
-                    import rt_bridge
-                    sigs = rt_bridge.scan_transcript(transcript)
-                    if sigs:
-                        await asyncio.to_thread(
-                            rt_bridge.save_scam_report, h_hash, state["bridge_number"], sigs,
-                            f"Iris was bridged onto a call with {state['bridge_number']}; "
-                            f"{len(sigs)} fraud signal(s) heard from the other party.",
-                            "third party hung up on" if state.get("bridge_ended_at") else "call ended")
 
             postcall_result: dict = {}
             try:
@@ -3722,6 +4100,8 @@ async def entrypoint(ctx: JobContext) -> None:
                         state["last_user_transcript"] = text
                     _append_transcript("caller", text)
                     _log_turn("caller", text)
+                    if _handle_pray_crisis(text, state, caller_e164, ctx):
+                        return
                     if state.get("bridge_active"):
                         _shield_check_triggers(text)
                         return
@@ -3842,8 +4222,70 @@ async def entrypoint(ctx: JobContext) -> None:
                                     reason=str(err)[:200])
 
     async def _start_session(voice: str | None) -> bool:
-        model = make_realtime_model(voice_override=voice)
-        session = AgentSession(llm=model)
+        dg_key = (os.getenv("DEEPGRAM_API_KEY") or "").strip()
+        el_key = (os.getenv("ELEVENLABS_API_KEY") or "").strip()
+        google_key = (os.getenv("GOOGLE_API_KEY") or "").strip()
+
+        openai_key = (os.getenv("OPENAI_API_KEY") or "").strip()
+        if rt_pray.is_pray_lane() and dg_key and el_key and os.getenv("RT_MODULAR_PIPELINE", "1").strip().lower() in ("1", "true", "yes"):
+            from livekit.plugins import deepgram, elevenlabs, silero
+            stt = deepgram.STT(api_key=dg_key, model="nova-3")
+            vad = silero.VAD.load()
+
+            if openai_key:
+                from livekit.plugins import openai
+                brain_model = os.getenv("OPENAI_BRAIN_MODEL", "gpt-4o-mini").strip()
+                llm = openai.LLM(model=brain_model, api_key=openai_key, temperature=0.78)
+                print(f"[rt-pray] Fast Modular Pipeline with OpenAI ACTIVE: {brain_model} (temp=0.78)", flush=True)
+            else:
+                from livekit.plugins import google
+                brain_model = os.getenv("GEMINI_BRAIN_MODEL", "gemini-2.5-flash").strip()
+                temp = max(0.6, float(os.getenv("GEMINI_TEMPERATURE", "0.75")))
+                llm = google.LLM(
+                    model=brain_model,
+                    api_key=google_key,
+                    temperature=temp,
+                    thinking_config={"thinking_budget": 0},
+                )
+                print(f"[rt-pray] Fast Modular Pipeline with Gemini ACTIVE: {brain_model}", flush=True)
+            model = llm
+
+            # Resolve the ACTUAL guide key — must match _build_instructions logic
+            # First-call callers (no display_name) get redirected to atrium
+            _raw_guide = state.get("active_guide") or (caller_info or {}).get("active_guide") or os.getenv("PRAY_DEFAULT_GUIDE", "god")
+            _is_first = not ((caller_info or {}).get("display_name") or "").strip()
+            _g_key = "atrium" if _is_first else _raw_guide
+            guide_cfg = rt_pray.get_guide(_g_key)
+            voice_id = guide_cfg.get("elevenlabs_voice_id", "y5QG8szHCCfX4292DMPZ")
+            v_settings = rt_pray.get_guide_voice_settings(_g_key)
+            state["active_guide"] = _g_key  # Sync state for downstream
+
+            tts_model = os.getenv("ELEVENLABS_MODEL", "eleven_flash_v2_5").strip()
+            tts = elevenlabs.TTS(
+                api_key=el_key,
+                voice_id=voice_id,
+                model=tts_model,
+                voice_settings=elevenlabs.VoiceSettings(
+                    stability=float(v_settings.get("stability", 0.18)),
+                    similarity_boost=float(v_settings.get("similarity_boost", 0.75)),
+                    style=float(v_settings.get("style", 0.58)),
+                    speed=1.0,
+                    use_speaker_boost=bool(v_settings.get("use_speaker_boost", True)),
+                ),
+            )
+            session = AgentSession(
+                stt=stt,
+                vad=vad,
+                llm=llm,
+                tts=tts,
+                turn_handling={"endpointing": {"min_delay": 0.35, "max_delay": 0.85}},
+            )
+            state["pipeline_tts"] = tts
+            state["pipeline_llm"] = llm
+            print(f"[rt-pray] Fast Modular Pipeline ACTIVE: Deepgram nova-3 STT + {brain_model} + ElevenLabs {tts_model} ({_g_key} voice={voice_id})", flush=True)
+        else:
+            model = make_realtime_model(voice_override=voice)
+            session = AgentSession(llm=model)
         _attach_handlers(session)
         try:
             prompt, resolved_display_name = await asyncio.wait_for(
@@ -3875,11 +4317,6 @@ async def entrypoint(ctx: JobContext) -> None:
             _off = set(rt_capabilities.CREDENTIALED_TOOLS)
             print(f"[rt-caps] cannot read the environment ({e!r}) — failing CLOSED, "
                   f"withholding every credentialed tool", flush=True)
-        # On a trial lane these come off on top of whatever the credentials already
-        # withheld, and for a different reason: not "there is no key for it" but
-        # "the governance forbids it". rt_trial.FORBIDDEN_TOOLS names the file that
-        # forbids each one. Empty set on every other lane.
-        _off |= rt_trial.forbidden_tools()
         _off |= rt_pray.forbidden_tools()
         if not rt_pray.is_pray_lane():
             _off |= {"switch_guide", "record_chain_blessing"}
@@ -3954,19 +4391,21 @@ async def entrypoint(ctx: JobContext) -> None:
         with contextlib.suppress(Exception):
             session.input.set_audio_enabled(True)
 
-        ready = False
-        try:
-            for _ in range(int(float(os.getenv("RT_LIVE_READY_TIMEOUT", "8")) / 0.1)):
-                if any(getattr(s, "_active_session", None) for s in getattr(model, "_sessions", [])):
-                    ready = True
-                    break
-                await asyncio.sleep(0.1)
-        except Exception as _exc:
-            rt_obs.obs.caught("agent.entrypoint", _exc)
-            pass
-        if not ready:
-            print(f"[rt] WARNING: Live session not active after "
-                  f"{os.getenv('RT_LIVE_READY_TIMEOUT', '8')}s", flush=True)
+        ready = True
+        if hasattr(model, "_sessions"):
+            ready = False
+            try:
+                for _ in range(int(float(os.getenv("RT_LIVE_READY_TIMEOUT", "8")) / 0.1)):
+                    if any(getattr(s, "_active_session", None) for s in getattr(model, "_sessions", [])):
+                        ready = True
+                        break
+                    await asyncio.sleep(0.1)
+            except Exception as _exc:
+                rt_obs.obs.caught("agent.entrypoint", _exc)
+                pass
+            if not ready:
+                print(f"[rt] WARNING: Live session not active after "
+                      f"{os.getenv('RT_LIVE_READY_TIMEOUT', '8')}s", flush=True)
         return ready
 
     async def _hangup() -> None:
@@ -4133,11 +4572,15 @@ async def entrypoint(ctx: JobContext) -> None:
         greeting_text = _greeting_text(caller_info.get("display_name"),
                                        caller_info.get("agent_alias"), call_count,
                                        seed=_seed, pick=_pick,
-                                       guide_key=caller_info.get("active_guide"),
+                                       guide_key=state.get("active_guide") or caller_info.get("active_guide"),
                                        caller_info=caller_info)
         state["greeting_enabled"] = os.getenv("RT_GREET", "1").strip().lower() in ("1", "true", "yes")
+    # Use the RESOLVED guide key (matching _build_instructions + _start_session)
     if rt_pray.is_pray_lane():
-        greet_voice = rt_pray.get_guide("atrium").get("voice", "Puck")
+        _g_k = state.get("active_guide") or caller_info.get("active_guide") or os.getenv("PRAY_DEFAULT_GUIDE", "god")
+        if not (caller_info.get("display_name") or "").strip():
+            _g_k = "atrium"  # First-call → atrium, matching prompt + TTS
+        greet_voice = rt_pray.get_guide(_g_k).get("voice", "Alnilam")
     else:
         greet_voice = voice_pref or os.getenv("GEMINI_LIVE_VOICE", "Aoede")
 
@@ -4268,7 +4711,7 @@ async def entrypoint(ctx: JobContext) -> None:
     # hello. First contact always played early; everyone else paid for the
     # ordering that seeding needed.
     _will_seed = _seed_enabled and not _must_be_deterministic
-    if state["greeting_enabled"] and not _will_seed:
+    if state["greeting_enabled"] and not _will_seed and not rt_pray.is_pray_lane():
         _path = None
         with contextlib.suppress(Exception):
             _path = await _greet_clip_task
@@ -4276,7 +4719,20 @@ async def entrypoint(ctx: JobContext) -> None:
             state["greeting_missed"] = True
             print("[rt] greeting not spoken — check-in brought forward to 8s", flush=True)
 
+    if rt_pray.is_pray_lane():
+        state["greeting_text"] = greeting_text
+        state["greeting_played"] = "say"
+
     await _start_session(voice=voice_pref)
+
+    if rt_pray.is_pray_lane() and state.get("greeting_enabled") and greeting_text:
+        sess = state.get("session")
+        if sess:
+            print(f"[rt-pray] Speaking live interruptible greeting: {greeting_text}", flush=True)
+            try:
+                sess.say(greeting_text, allow_interruptions=True)
+            except Exception as _say_err:
+                print(f"[rt-pray] Error speaking greeting: {_say_err}", flush=True)
 
     # ── Texts that arrive during the call ──
     # The webhook runs in the worker's main process and this job in a child,
@@ -4353,7 +4809,7 @@ async def entrypoint(ctx: JobContext) -> None:
 
     sms_task = asyncio.create_task(_sms_monitor_task())
 
-    if state["greeting_enabled"] and _will_seed:
+    if state["greeting_enabled"] and _will_seed and not rt_pray.is_pray_lane():
         # The fallback render was started before the chime and has been running
         # throughout. Reuse it — starting a second one here would re-enter
         # _clip_wav for a clip already in flight.
@@ -4390,37 +4846,74 @@ async def entrypoint(ctx: JobContext) -> None:
             if not ctx.room.remote_participants:
                 break
 
-            # ── 3-Tier Call Cadence Lifecycle (20m soft-wrap, 30m firm-wrap, 35m hard-cap) ──
+            # ── Call Cadence / Budget Lifecycle ──
             elapsed_s = time.time() - call_started
-            cadence_stage = rt_cadence.evaluate_cadence_stage(elapsed_s)
-            prev_cadence_stage = state.get("cadence_stage", rt_cadence.STAGE_NORMAL)
-
-            if cadence_stage != prev_cadence_stage:
-                state["cadence_stage"] = cadence_stage
-                rt_obs.obs.event("call.cadence_stage", stage=cadence_stage, elapsed_s=round(elapsed_s, 1))
-                c_name = state.get("display_name") or "Friend"
-
-                if cadence_stage in (rt_cadence.STAGE_SOFT_WRAP, rt_cadence.STAGE_FIRM_WRAP):
-                    print(f"[rt-cadence] transitioning to {cadence_stage} (elapsed={elapsed_s:.1f}s)", flush=True)
-                    ag = state.get("agent")
-                    if ag is not None and hasattr(ag, "update_instructions"):
-                        directive = rt_cadence.render_cadence_directive(cadence_stage, c_name)
+            if rt_pray.is_pray_lane():
+                c_tier = caller_info.get("subscription_tier") or "grace"
+                g_key = state.get("active_guide") or caller_info.get("active_guide") or "god"
+                budget_eval = rt_budget_guard.evaluate_call_budget(
+                    tier=c_tier,
+                    elapsed_seconds=elapsed_s,
+                    in_tokens=int(state.get("in_tokens") or 0),
+                    out_tokens=int(state.get("out_tokens") or 0),
+                    persona=g_key,
+                )
+                prev_budget_status = state.get("budget_status", "normal")
+                if budget_eval.status != prev_budget_status:
+                    state["budget_status"] = budget_eval.status
+                    rt_obs.obs.event("pray.budget_status", status=budget_eval.status, elapsed_s=round(elapsed_s, 1), cost_usd=budget_eval.accrued_cost_usd)
+                    if budget_eval.status == "soft_wrap":
+                        print(f"[rt-budget-guard] soft wrap triggered (tier={c_tier}, elapsed={elapsed_s:.1f}s)", flush=True)
+                        ag = state.get("agent")
+                        if ag is not None and hasattr(ag, "update_instructions") and budget_eval.closing_directive:
+                            with contextlib.suppress(Exception):
+                                asyncio.create_task(ag.update_instructions(budget_eval.closing_directive + "\n\n" + ag._base_instructions))
+                    elif budget_eval.status == "hard_stop":
+                        # Exclude tester/owner (+19174030642) and paid tiers from hard disconnect
+                        if caller_e164 in ("+19174030642",) or c_tier in ("sanctuary", "devotion"):
+                            continue
+                        print(f"[rt-budget-guard] hard stop reached (tier={c_tier}, elapsed={elapsed_s:.1f}s) — ending call gracefully", flush=True)
+                        benediction = rt_budget_guard.get_soft_wrap_closing_text(g_key, c_tier)
+                        _append_transcript_shared(state, "agent", benediction)
+                        sess = state.get("session")
+                        if sess:
+                            with contextlib.suppress(Exception):
+                                sess.say(benediction, allow_interruptions=False)
+                                await asyncio.sleep(6.0)
                         with contextlib.suppress(Exception):
-                            asyncio.create_task(ag.update_instructions(directive + ag._base_instructions))
+                            await ctx.delete_room()
+                        break
+            else:
+                # ── 3-Tier Call Cadence Lifecycle (20m soft-wrap, 30m firm-wrap, 35m hard-cap) ──
+                cadence_stage = rt_cadence.evaluate_cadence_stage(elapsed_s)
+                prev_cadence_stage = state.get("cadence_stage", rt_cadence.STAGE_NORMAL)
 
-                elif cadence_stage == rt_cadence.STAGE_HARD_CAP:
-                    print(f"[rt-cadence] 35m hard ceiling reached (elapsed={elapsed_s:.1f}s) — saying goodbye and disconnecting", flush=True)
-                    with contextlib.suppress(Exception):
-                        voice_used = voice_pref or os.getenv("GEMINI_LIVE_VOICE", "Aoede")
-                        bye = rt_cadence.get_cadence_farewell_message(c_name)
-                        path = await asyncio.to_thread(_clip_wav, voice_used, bye, "cadence-farewell")
-                        if path:
-                            _append_transcript_shared(state, "agent", bye)
-                            await _play_clip(ctx.room, path, preroll=0.2,
-                                             exclude_identity=state.get("bridge_identity"))
-                    with contextlib.suppress(Exception):
-                        await ctx.delete_room()
-                    break
+                if cadence_stage != prev_cadence_stage:
+                    state["cadence_stage"] = cadence_stage
+                    rt_obs.obs.event("call.cadence_stage", stage=cadence_stage, elapsed_s=round(elapsed_s, 1))
+                    c_name = state.get("display_name") or "Friend"
+
+                    if cadence_stage in (rt_cadence.STAGE_SOFT_WRAP, rt_cadence.STAGE_FIRM_WRAP):
+                        print(f"[rt-cadence] transitioning to {cadence_stage} (elapsed={elapsed_s:.1f}s)", flush=True)
+                        ag = state.get("agent")
+                        if ag is not None and hasattr(ag, "update_instructions"):
+                            directive = rt_cadence.render_cadence_directive(cadence_stage, c_name)
+                            with contextlib.suppress(Exception):
+                                asyncio.create_task(ag.update_instructions(directive + ag._base_instructions))
+
+                    elif cadence_stage == rt_cadence.STAGE_HARD_CAP:
+                        print(f"[rt-cadence] 35m hard ceiling reached (elapsed={elapsed_s:.1f}s) — saying goodbye and disconnecting", flush=True)
+                        with contextlib.suppress(Exception):
+                            voice_used = voice_pref or os.getenv("GEMINI_LIVE_VOICE", "Aoede")
+                            bye = rt_cadence.get_cadence_farewell_message(c_name)
+                            path = await asyncio.to_thread(_clip_wav, voice_used, bye, "cadence-farewell")
+                            if path:
+                                _append_transcript_shared(state, "agent", bye)
+                                await _play_clip(ctx.room, path, preroll=0.2,
+                                                 exclude_identity=state.get("bridge_identity"))
+                        with contextlib.suppress(Exception):
+                            await ctx.delete_room()
+                        break
 
             last_activity = state.get("last_activity_time") or time.time()
             silence_duration = time.time() - last_activity
@@ -4457,7 +4950,7 @@ async def entrypoint(ctx: JobContext) -> None:
                     await ctx.delete_room()
                 break
 
-            quiet_limit = 8.0 if state.get("greeting_missed") else 30.0
+            quiet_limit = 8.0 if state.get("greeting_missed") else 25.0
             if silence_duration >= quiet_limit and not soft_nudge_done:
                 print(f"[rt-silence] {quiet_limit:.0f}s silence ({silence_duration:.1f}s) — checking in live dynamically", flush=True)
                 with contextlib.suppress(Exception):
@@ -4465,14 +4958,22 @@ async def entrypoint(ctx: JobContext) -> None:
                 soft_nudge_done = True
                 state["greeting_missed"] = False
                 state["last_activity_time"] = time.time()
-                with contextlib.suppress(Exception):
-                    voice_used = voice_pref or os.getenv("GEMINI_LIVE_VOICE", "Aoede")
-                    nudge = "Take your time — I'm right here with you."
-                    path = await asyncio.to_thread(_clip_wav, voice_used, nudge, "checkin")
-                    if path:
-                        _append_transcript_shared(state, "agent", nudge)
-                        await _play_clip(ctx.room, path, preroll=0.05,
-                                         exclude_identity=state.get("bridge_identity"))
+                if rt_pray.is_pray_lane() and state.get("session"):
+                    g_key = state.get("active_guide") or "god"
+                    c_name = state.get("caller_info", {}).get("display_name") or state.get("display_name")
+                    nudge = rt_pray.get_silence_nudge(g_key, c_name)
+                    _append_transcript_shared(state, "agent", nudge)
+                    with contextlib.suppress(Exception):
+                        state["session"].say(nudge, allow_interruptions=True)
+                else:
+                    with contextlib.suppress(Exception):
+                        voice_used = voice_pref or os.getenv("GEMINI_LIVE_VOICE", "Aoede")
+                        nudge = "Take your time — I'm right here with you."
+                        path = await asyncio.to_thread(_clip_wav, voice_used, nudge, "checkin")
+                        if path:
+                            _append_transcript_shared(state, "agent", nudge)
+                            await _play_clip(ctx.room, path, preroll=0.05,
+                                             exclude_identity=state.get("bridge_identity"))
 
             if silence_duration >= 180.0:
                 print("[rt-silence] 180s silence threshold reached — disconnecting", flush=True)

@@ -89,3 +89,38 @@ def test_cadence_farewell_message():
 
     default_msg = rt_cadence.get_cadence_farewell_message(None)
     assert "Take wonderful care" in default_msg
+
+
+def test_pray_grace_tier_cadence(monkeypatch):
+    """Verify PrayPal Grace Tier limits (5m soft, 7m firm, 10m hard cap) to protect COGS."""
+    monkeypatch.setenv("AGENT_NAME", "pray-pal")
+
+    soft, firm, hard = rt_cadence.get_cadence_thresholds()
+    assert soft == 5.0
+    assert firm == 7.0
+    assert hard == 10.0
+
+    # 4.5 mins (270s) -> normal
+    assert rt_cadence.evaluate_cadence_stage(270.0) == rt_cadence.STAGE_NORMAL
+    # 5.0 mins (300s) -> soft_wrap
+    assert rt_cadence.evaluate_cadence_stage(300.0) == rt_cadence.STAGE_SOFT_WRAP
+    # 7.0 mins (420s) -> firm_wrap
+    assert rt_cadence.evaluate_cadence_stage(420.0) == rt_cadence.STAGE_FIRM_WRAP
+    # 10.0 mins (600s) -> hard_cap
+    assert rt_cadence.evaluate_cadence_stage(600.0) == rt_cadence.STAGE_HARD_CAP
+
+    # Pastoral directives
+    soft_dir = rt_cadence.render_cadence_directive(rt_cadence.STAGE_SOFT_WRAP, "Sarah")
+    assert "5-MINUTE PRAYER WRAP-UP" in soft_dir
+    assert "Sarah" in soft_dir
+    assert "benediction" in soft_dir
+
+    firm_dir = rt_cadence.render_cadence_directive(rt_cadence.STAGE_FIRM_WRAP, "Sarah")
+    assert "7-MINUTE PRAYER CEILING" in firm_dir
+    assert "Sarah" in firm_dir
+    assert "end_call()" in firm_dir
+
+    # Farewell benediction
+    bye_msg = rt_cadence.get_cadence_farewell_message("Sarah")
+    assert "May divine peace, grace, and light be with you always, Sarah" in bye_msg
+

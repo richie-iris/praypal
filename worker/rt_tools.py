@@ -1,7 +1,7 @@
-"""rt_tools.py — In-Call Agent Tools & Execution Handlers for Phone-Pal.
+"""rt_tools.py — In-Call Agent Tools & Execution Handlers for PrayPal.
 
 Provides a clean interface for in-call function tools, database interactions,
-and safety guards used by the Phone-Pal real-time voice agent.
+and safety guards used by the PrayPal real-time voice agent.
 """
 from __future__ import annotations
 

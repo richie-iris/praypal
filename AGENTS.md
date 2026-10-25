@@ -111,8 +111,8 @@ The Owner has committed **$10,000** in total seed capital to fund marketing, tok
   - *On-Screen Dynamic Overlay*: The mobile browser app renders this canonical art as the living altar, with subtle particle animations (glowing embers, divine light rays) and live synchronized prayer text.
 
 ### 3.3 Conference Calls & Multi-Party Family Prayer Circles (`rt_bridge.py` + LiveKit)
-- LiveKit rooms natively support multi-party WebRTC calling and PSTN phone bridging.
-- Families, church prayer groups, or satsang circles can dial in together with a shared PIN or tap a shared web link.
+- Multi-party PSTN phone bridging connects family circles into live shared prayer.
+- Families, church prayer groups, or satsang circles dial in together via telephone with a shared conference PIN.
 - The Divine Guide moderates the prayer circle, invites each family member to speak their blessing, and leads group prayers.
 
 ### 3.4 Group Messaging & WhatsApp Multi-Channel Bridge (`rt_sms.py` + Twilio WhatsApp API)
@@ -190,20 +190,21 @@ We utilize Gemini Multimodal Live's native voice presets combined with custom ac
 
 ---
 
-## 5. Mobile-Browser-First Screen Application (`sites/pray-pal/`)
+## 5. Mobile Sanctuary Companion & Practice Screen (Root / Vercel: `index.html`, `styles.css`, `app.js`)
 
-The primary touchpoint is a responsive, mobile-first Web Application (PWA) running on iOS Safari and Android Chrome.
+The mobile web application is strictly a **visual and devotional companion**. All live voice calling and spiritual interactions occur **exclusively via Phone Call (PSTN dial-in to +1 862-358-8238) and Conversational SMS/MMS**.
 
 ### Core Capabilities:
-1. **In-Browser WebRTC Voice**: Users tap once to talk with God/Moses/Noah/Krishna directly in the browser via LiveKit JS SDK. No phone dialling or cellular minutes required.
+1. **Phone & SMS/MMS Spiritual Channels**:
+   - Voice prayers occur exclusively over telephone carrier lines (+1 862-358-8238) via Twilio SIP trunking.
+   - Text prayers, photo blessings, and prayer chains occur exclusively over SMS/MMS.
 2. **Synchronized Phonetic Enunciation Engine**:
-   - As the agent speaks or chants, the screen updates in real time via LiveKit Room Data Channels.
-   - Displays Devanagari / Hebrew / Arabic script + Romanized phonetic guide + syllable stress indicators + English meaning.
+   - As the agent speaks or chants, displays Devanagari / Hebrew / Arabic script + Romanized phonetic guide + syllable stress indicators + English meaning.
 3. **Tactile Digital Rosary / Japa Mala Counter**:
    - Interactive bead counter (1 to 108) with mobile haptic vibration feedback (`navigator.vibrate([15])`).
 4. **Altar Visualizer & Ambient Audio Fader**:
    - Displays the canonical sacred art for the active guide (switches dynamically to Diwali diyas or holiday themes on festival days).
-   - Lets the user adjust the volume of the background drone (tanpura, church organ, singing bowl) under the voice.
+   - Lets the user adjust the volume of the background drone (tanpura, church organ, singing bowl) while praying or reflecting.
 
 ---
 
@@ -218,8 +219,10 @@ An autonomous daemon running every 15 minutes:
 
 ## 7. Strict Invariant Rules for Developers & Agents
 
-1. **Fail-Closed Crisis Safety Intercept (988 Lifeline)**:
-   - If any caller mentions suicide, self-harm, severe clinical depression, or immediate danger, the agent must immediately suspend normal persona, express deep compassionate care, and recite/refer to the **988 Suicide & Crisis Lifeline**. Never improvise medical advice.
+1. **Devotional Scope & Acute Crisis Triage Out of Scope**:
+   - PrayPal is strictly a personal devotional, spiritual, and liturgical companion for prayer, shlokas, psalms, and sacred scriptures.
+   - Acute crisis intervention, suicide hotline triage (such as 988 or emergency psychiatric care), and clinical medical/mental healthcare are explicitly **OUT OF SCOPE**.
+   - PrayPal does not provide medical advice, psychiatric triage, or emergency hotline services. Callers in acute crisis or distress must consult licensed professionals, emergency healthcare, or dedicated emergency services.
 2. **Confessional Privacy & HMAC Pepper**:
    - Plaintext phone numbers must never be logged or stored.
    - All caller records in Supabase must be HMAC-SHA256 hashed with `RT_PHONE_HASH_PEPPER` ($\ge 16$ characters).
@@ -235,7 +238,7 @@ An autonomous daemon running every 15 minutes:
 ## 8. Common Operating Commands
 
 ```bash
-# 1. Run PrayPal test suite (unit tests, phone phonetics, crisis guardrails)
+# 1. Run PrayPal test suite (unit tests, phone phonetics, compliance)
 cd worker && uv run pytest tests/test_rt_pray.py tests/test_rt_phonetics.py
 
 # 2. Check financial unit cost simulator

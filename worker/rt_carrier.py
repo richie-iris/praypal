@@ -117,6 +117,32 @@ def outbound_allowed(fresh: bool = False) -> tuple[bool, str, dict]:
     return allowed, reason, detail
 
 
+def inbound_allowed(fresh: bool = False) -> tuple[bool, str, dict]:
+    """(allowed, reason, detail) for answering an inbound call.
+
+    Checks today's Twilio carrier spend against TWILIO_DAILY_SPEND_USD.
+    If no Twilio credentials are configured (local dev/test), passes through (allowed=True).
+    If usage is unreadable, passes through with warning so live prayers are not dropped on transient API blips.
+    If daily spend >= cap, refuses the call (allowed=False, reason="daily_cap_spent") to prevent runaway carrier spend.
+    """
+    cap = cap_usd()
+    if _credentials() is None:
+        return True, "no_twilio_credentials", {"spend_usd": None, "cap_usd": cap}
+
+    spend = spend_today_usd(fresh=fresh)
+    if spend is None:
+        allowed, reason = True, "usage_unreadable_passthrough"
+    elif spend >= cap:
+        allowed, reason = False, "daily_cap_spent"
+    else:
+        allowed, reason = True, "under_cap"
+
+    detail = {"spend_usd": spend, "cap_usd": cap}
+    with contextlib.suppress(Exception):
+        _obs.event("guard.decision", guard="carrier_inbound_cap", allowed=allowed, reason=reason, **detail)
+    return allowed, reason, detail
+
+
 def on_usage_trigger() -> dict:
     """The alarm rang (/twilio/usage). The body is not trusted; the account is
     asked again, and the answer is logged loudly either way."""

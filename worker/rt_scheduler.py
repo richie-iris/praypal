@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import rt_obs
 
+import asyncio
 import contextlib
 import json
 import os
@@ -836,6 +837,7 @@ def run_once() -> int:
     deployments) performs the purge and not only the poll loop does.
     """
     _housekeeping_if_due()
+    _pray_tasks_if_due()
     jobs = fetch_pending_jobs()
     if not jobs:
         return 0
@@ -862,6 +864,42 @@ import signal
 _RUNNING = True
 _LAST_HOUSEKEEPING = 0.0
 _HOUSEKEEPING_EVERY_S = 3600
+
+_LAST_PRAY_CHECK = 0.0
+_PRAY_CHECK_INTERVAL_S = 300.0
+
+
+def _pray_tasks_if_due() -> None:
+    """Evaluate and trigger PrayPal devotions and chron watcher tasks."""
+    global _LAST_PRAY_CHECK
+    import rt_pray
+    if not rt_pray.is_pray_lane():
+        return
+    now = time.time()
+    if now - _LAST_PRAY_CHECK < _PRAY_CHECK_INTERVAL_S:
+        return
+    _LAST_PRAY_CHECK = now
+    try:
+        import rt_devotion_scheduler
+        dispatched = rt_devotion_scheduler.check_and_dispatch_due_devotions()
+        if dispatched:
+            print(f"[rt-scheduler] dispatched {len(dispatched)} due devotion(s)", flush=True)
+    except Exception as exc:
+        rt_obs.obs.caught("rt_scheduler.pray_devotions", exc)
+
+    try:
+        import rt_chron_watcher
+        watcher = rt_chron_watcher.ChronWatcherDaemon()
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            loop = None
+        if loop and loop.is_running():
+            asyncio.create_task(watcher.run_once())
+        else:
+            asyncio.run(watcher.run_once())
+    except Exception as exc:
+        rt_obs.obs.caught("rt_scheduler.chron_watcher", exc)
 
 
 def _housekeeping() -> dict:

@@ -8,6 +8,7 @@ import pytest
 os.environ["RT_ENV"] = "test"
 os.environ["LOG_LEVEL"] = "DEBUG"
 os.environ["SUPABASE_PROJECT_REF"] = "testprojectref"
+os.environ["SUPABASE_URL"] = "https://testprojectref.supabase.co"
 os.environ["SUPABASE_SERVICE_ROLE_KEY"] = "test-service-role-key"
 os.environ["SUPABASE_ACCESS_TOKEN"] = "test-access-token"  # noqa: S105 - dummy value for the stubbed test lane
 

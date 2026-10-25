@@ -1,4 +1,4 @@
-"""rt_sms_inbound.py — what happens when someone texts Iris.
+"""rt_sms_inbound.py — what happens when someone texts PrayPal.
 
 rt_health receives Twilio's POST, proves it is Twilio's
 (rt_sms.webhook_is_from_twilio) and hands the fields to accept_webhook(),
@@ -49,6 +49,24 @@ _SEEN_MAX = 2000
 _SEEN_LOCK = threading.Lock()
 
 _mask = rt_sms._mask
+
+_OPT_OUT_KEYWORDS = frozenset({"stop", "stopall", "unsubscribe", "cancel", "end", "quit"})
+_OPT_IN_KEYWORDS = frozenset({"start", "unstop"})
+_HELP_KEYWORDS = frozenset({"help", "info"})
+
+OPT_OUT_CONFIRMATION = (
+    "PrayPal: You have been unsubscribed and will receive no further messages. "
+    "Text START to resubscribe or HELP for info."
+)
+OPT_IN_CONFIRMATION = (
+    "PrayPal: Welcome back to the sanctuary. You have been resubscribed to PrayPal messages. "
+    "Reply HELP for help, STOP to unsubscribe. Msg&data rates may apply."
+)
+HELP_RESPONSE = (
+    "PrayPal: Sacred spiritual telephone companion & prayer support. "
+    "For help, contact support@praypal.live or call +18623588238. "
+    "Reply STOP to cancel. Msg&data rates may apply."
+)
 
 
 # ── Media ────────────────────────────────────────────────────────────────────
@@ -191,9 +209,44 @@ def _caller_context(from_e164: str) -> tuple[str, str, str]:
     return display_name, agent_alias, context
 
 
+# ── PER-CALLER RATE LIMITING (Denial-of-Wallet & Flooding Protection) ────────
+SMS_RATE_LIMIT_MAX: int = 5          # Max 5 inbound texts/MMS
+SMS_RATE_LIMIT_WINDOW_S: float = 60.0  # Per 60 seconds
+_SMS_RATE_LIMIT_BUCKET: dict[str, list[float]] = {}
+
+
+def check_sms_rate_limit(phone_hash: str, now: float | None = None) -> bool:
+    """Sliding-window rate limiter per caller phone hash.
+
+    Returns True if caller is ALLOWED, False if RATE LIMITED.
+    Protects against Denial-of-Wallet (DoW) attacks on Gemini vision & Twilio carrier spend.
+    Preserves confessional privacy by keying on phone_hash rather than raw E.164.
+    """
+    if not phone_hash:
+        return True
+    cur_time = now if now is not None else time.time()
+    cutoff = cur_time - SMS_RATE_LIMIT_WINDOW_S
+
+    timestamps = _SMS_RATE_LIMIT_BUCKET.get(phone_hash, [])
+    # Evict timestamps older than the sliding window
+    fresh = [t for t in timestamps if t > cutoff]
+    if len(fresh) >= SMS_RATE_LIMIT_MAX:
+        _SMS_RATE_LIMIT_BUCKET[phone_hash] = fresh
+        return False
+
+    fresh.append(cur_time)
+    _SMS_RATE_LIMIT_BUCKET[phone_hash] = fresh
+    return True
+
+
+def reset_sms_rate_limits() -> None:
+    """Clear all rate limiter buckets (used in unit test isolation)."""
+    _SMS_RATE_LIMIT_BUCKET.clear()
+
+
 def process_incoming_sms(from_number: str, body: str, media_urls: list[str] | None = None,
                          message_sid: str | None = None) -> str | None:
-    """Record an inbound text and compose Iris's reply. None means "do not reply".
+    """Record an inbound text and compose the guide's reply. None means "do not reply".
 
     The ledger write comes first, before any gate: the call process polls it
     for texts sent mid-call, and that must work even on a lane where replies
@@ -219,6 +272,55 @@ def process_incoming_sms(from_number: str, body: str, media_urls: list[str] | No
         if is_crisis and crisis_reply:
             print(f"[rt-sms-inbound] PrayPal 988 crisis intercept triggered for {_mask(from_e164)}", flush=True)
             return crisis_reply
+
+    # ── TCPA / CTIA Keyword Intercept ───────────────────────────────────────
+    norm_keyword = re.sub(r"[^\w]", "", clean_body.strip().lower())
+    if norm_keyword in _OPT_OUT_KEYWORDS:
+        rt_sms.set_opt_out(from_e164, True)
+        print(f"[rt-sms-inbound] TCPA opt-out received from {_mask(from_e164)}", flush=True)
+        _obs.event("sms.tcpa_opt_out", caller_hash=rt_prefs.phone_hash(from_e164)[:8] if from_e164 else "")
+        return OPT_OUT_CONFIRMATION
+
+    if norm_keyword in _OPT_IN_KEYWORDS:
+        rt_sms.set_opt_out(from_e164, False)
+        print(f"[rt-sms-inbound] TCPA opt-in received from {_mask(from_e164)}", flush=True)
+        _obs.event("sms.tcpa_opt_in", caller_hash=rt_prefs.phone_hash(from_e164)[:8] if from_e164 else "")
+        return OPT_IN_CONFIRMATION
+
+    if norm_keyword in _HELP_KEYWORDS:
+        print(f"[rt-sms-inbound] TCPA HELP requested from {_mask(from_e164)}", flush=True)
+        _obs.event("sms.tcpa_help", caller_hash=rt_prefs.phone_hash(from_e164)[:8] if from_e164 else "")
+        return HELP_RESPONSE
+
+    # If caller has opted out, refuse any further automated processing / LLM responses
+    if rt_sms.is_opted_out(from_e164):
+        print(f"[rt-sms-inbound] Caller {_mask(from_e164)} is opted out; ignoring message", flush=True)
+        return None
+
+    if rt_pray.is_pray_lane():
+        h_hash = rt_prefs.phone_hash(from_e164) if from_e164 else ""
+        # 1. Right to Spiritual Portability (Export Journey)
+        if clean_body.strip().upper() in ("JOURNEY", "EXPORT", "MY PRAYERS", "MY JOURNAL"):
+            import rt_caller_export
+            bundle = rt_pray.get_bundle(h_hash) if h_hash else {}
+            intentions = bundle.get("intentions") or []
+            answered = [i.get("intention_text", "") for i in intentions if i.get("is_answered")]
+            return rt_caller_export.generate_sms_export_digest(h_hash, len(answered), recent_answered=answered)
+
+        # 2. Liturgical Holiday Greeting Match
+        import rt_pray_holiday
+        active_holiday = rt_pray_holiday.get_active_holiday()
+        if active_holiday and any(w in clean_body.lower() for w in ("happy holiday", "blessing", "holiday", "card")):
+            card = rt_pray_holiday.get_holiday_card_payload(active_holiday["id"])
+            if card:
+                return f"{card.get('name')}: {card.get('blessing')}\n{card.get('sacred_verse')}"
+
+    # Enforce rate limiting before expensive capabilities checks, media downloads, and LLM inference
+    caller_hash = rt_prefs.phone_hash(from_e164) if from_e164 else ""
+    if caller_hash and not check_sms_rate_limit(caller_hash):
+        print(f"[rt-sms-inbound] rate limit exceeded for caller {_mask(from_e164)}; skipping LLM inference", flush=True)
+        _obs.event("sms.rate_limited", caller_hash=caller_hash[:8], has_media=bool(media))
+        return None
 
     import rt_capabilities
     if not rt_capabilities.enabled("send_sms"):
@@ -316,7 +418,11 @@ def handle_incoming(texter_e164: str, our_number: str, body: str,
                 media_to_send = m_match.group(1).strip()
                 reply = re.sub(r"\[MEDIA:\s*\S+?\]", "", reply).strip()
 
-        res = rt_sms.send_sms(texter_e164, reply, from_number=(our_number or "").strip() or None, media_url=media_to_send)
+        send_kwargs = {}
+        if reply == OPT_OUT_CONFIRMATION:
+            send_kwargs["allow_opt_out_reply"] = True
+        res = rt_sms.send_sms(texter_e164, reply, from_number=(our_number or "").strip() or None,
+                              media_url=media_to_send, **send_kwargs)
         if res.get("error"):
             print(f"[rt-sms-inbound] reply to {_mask(texter_e164)} failed: {res.get('message')}", flush=True)
         else:

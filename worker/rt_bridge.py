@@ -1,9 +1,8 @@
 """rt_bridge.py — Conference Shield: dial policy, scam signatures, bridge ledger.
 
-Iris can pull a third party onto a call ("call that number back with me") so an
-older adult is never alone on the line with a stranger. This module owns the
-deterministic half: WHO may be dialed, HOW OFTEN, and WHAT a scam sounds like.
-The model never decides any of it — it only asks.
+PrayPal can pull family members or prayer circle participants onto a call ("call my sister so we can pray together")
+so callers can pray in shared communion. This module owns the deterministic half: WHO may be dialed, HOW OFTEN,
+and WHAT safety boundaries apply. The model never decides any of it — it only asks.
 
 Policy, in one breath: US/Canada only, never emergency or premium numbers,
 never more than a handful of bridges a day per caller, never a dial the caller
@@ -102,7 +101,7 @@ class DialRefused(Exception):
 
 
 def normalize_dialable(raw: str | None) -> str:
-    """Return an E.164 number Iris is permitted to dial, or raise DialRefused.
+    """Return an E.164 number the agent is permitted to dial, or raise DialRefused.
 
     The reason text is written to be spoken to an older adult, not logged.
     """
@@ -195,7 +194,7 @@ def check_and_record_dial(h: str, e164: str) -> None:
     """Enforce the per-caller daily bridge cap and record this dial.
 
     Raises DialRefused when the cap is spent. The ledger doubles as the audit
-    trail for every number Iris has ever dialed on this caller's behalf.
+    trail for every number PrayPal has ever dialed on this caller's behalf.
     """
     # Read-modify-write with no lock. Two simultaneous sessions for ONE caller
     # could each read count=N and both write N+1, under-counting by one; that is
