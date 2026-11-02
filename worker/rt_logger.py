@@ -1,4 +1,4 @@
-"""rt_logger.py — Structured JSON Logger for Phone-Pal (Iris).
+"""rt_logger.py — Structured JSON Logger for PrayPal.
 
 Emits structured JSON log lines for observability, alerting, and log aggregation.
 Supports Sentry error monitoring and external HTTP log shipping sinks.

@@ -4,6 +4,7 @@ from __future__ import annotations
 import os
 from unittest.mock import MagicMock, patch
 
+import pytest
 import rt_pray
 
 
@@ -31,11 +32,40 @@ def test_crisis_intercept_safety():
     assert not is_crisis
     assert text is None
 
-    # Crisis trigger
+    # Classic Crisis triggers
     is_crisis, text = rt_pray.check_crisis("I can't take this anymore, I want to kill myself.")
     assert is_crisis
     assert "988" in text
     assert "Suicide & Crisis Lifeline" in text
+
+    # Expanded semantic phrases
+    for phrase in [
+        "I just want to end it all tonight",
+        "I can't go on anymore",
+        "I cannot go on living like this",
+        "I'm sitting here with a bottle of pills",
+        "I just want the pain to stop",
+        "My children would be better off without me",
+        "I have no reason to live",
+        "I wish I was dead",
+        "Saying goodbye forever to everyone",
+    ]:
+        is_cr, resp = rt_pray.check_crisis(phrase)
+        assert is_cr, f"Failed to detect crisis trigger in: {phrase!r}"
+        assert resp is not None
+        assert "988" in resp
+
+
+def test_legal_disclosures_in_greetings():
+    with patch.dict(os.environ, {"AGENT_NAME": "pray-pal"}):
+        # Calls are NOT recorded. Sanctity and privacy of confessional prayer is preserved.
+        atrium_greet = rt_pray.greeting("atrium")
+        assert "Calls are recorded" not in atrium_greet
+
+        # On call_count=0, no recording disclosure is ever spoken
+        jesus_first_greet = rt_pray.greeting("jesus", call_count=0)
+        assert "Calls are recorded" not in jesus_first_greet
+        assert "Peace be with you" in jesus_first_greet
 
 
 def test_pantheon_guides():
@@ -334,3 +364,65 @@ def test_postcall_diversion_to_pray():
         res = rt_postcall_worker.process_post_call_transcript("+18005550199", transcript)
         assert res.get("diverted") is True
         mock_pray_postcall.assert_called_once()
+
+
+def test_agent_voice_crisis_intercept():
+    from agent import _handle_pray_crisis
+
+    state = {}
+    mock_ctx = MagicMock()
+
+    # 1. Non-pray lane -> returns False immediately
+    with patch.dict(os.environ, {"AGENT_NAME": "phone-pal", "RT_PRAY_LANE": "0"}):
+        handled = _handle_pray_crisis("I want to kill myself", state, "+15551234567", mock_ctx)
+        assert not handled
+        assert "crisis_detected" not in state
+
+    # 2. Pray lane with benign prayer text -> returns False
+    with patch.dict(os.environ, {"AGENT_NAME": "pray-pal"}):
+        handled = _handle_pray_crisis("Please pray for my mother", state, "+15551234567", mock_ctx)
+        assert not handled
+        assert "crisis_detected" not in state
+
+    # 3. Pray lane with crisis text -> returns True, sets crisis_detected, dispatches lifeline
+    with patch.dict(os.environ, {"AGENT_NAME": "pray-pal"}), \
+         patch("agent._say_to_caller") as mock_say, \
+         patch("rt_sms.send_sms") as mock_sms:
+        handled = _handle_pray_crisis("I can't take this anymore, I want to end my life", state, "+15551234567", mock_ctx)
+        assert handled is True
+        assert state["crisis_detected"] is True
+
+
+@pytest.mark.asyncio
+async def test_agent_voice_crisis_intercept_async():
+    from agent import _handle_pray_crisis
+
+    state = {}
+    mock_ctx = MagicMock()
+
+    with patch.dict(os.environ, {"AGENT_NAME": "pray-pal"}), \
+         patch("agent._say_to_caller") as mock_say, \
+         patch("rt_sms.send_sms") as mock_sms:
+        handled = _handle_pray_crisis("I can't take this anymore, I want to commit suicide", state, "+15551234567", mock_ctx)
+        assert handled is True
+        assert state["crisis_detected"] is True
+
+
+def test_apply_heavenly_sound_profile_memory_bounds():
+    # 1. Empty buffer returns empty bytes
+    assert rt_pray.apply_heavenly_sound_profile(b"") == b""
+
+    # 2. Normal 0.1s buffer processes with reverb
+    sample_rate = 24000
+    normal_pcm = b"\x00\x00" * int(sample_rate * 0.1)
+    processed = rt_pray.apply_heavenly_sound_profile(normal_pcm, rate=sample_rate, guide_key="jesus")
+    assert isinstance(processed, bytes)
+    assert len(processed) > 0
+
+    # 3. Oversized PCM buffer (>30s / > 1.44MB) returns dry buffer immediately to prevent OOM
+    oversized_pcm = b"\x00\x00" * (rt_pray.MAX_HEAVENLY_PCM_SAMPLES + 100)
+    dry_fallback = rt_pray.apply_heavenly_sound_profile(oversized_pcm, rate=sample_rate)
+    assert dry_fallback == oversized_pcm
+
+
+

@@ -6,7 +6,11 @@ requires-python = ">=3.11"
 # Pinned to the 1.6.x SDK line: the worker is built and tested against it.
 dependencies = [
     "livekit-agents>=1.6.1,<1.7",
+    "livekit-plugins-deepgram>=0.8",
+    "livekit-plugins-elevenlabs>=0.8",
     "livekit-plugins-google>=1.6.1",
+    "livekit-plugins-openai>=1.6.7",
+    "livekit-plugins-silero>=0.8",
     "python-dotenv>=1.0.0",
 ]
 

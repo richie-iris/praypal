@@ -2,49 +2,56 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>PrayPal — The Sanctuary Atrium &amp; Agents of God</title>
-  <meta name="description" content="An airy, modern spiritual sanctuary. Enter the Sanctuary Atrium to speak with Agents of God in the sacred traditions of Jesus, Lord Shiva, Lord Krishna, Moses, Noah, and the Divine Mother. High-fidelity voice hotline, authentic accents, and multimodal blessings.">
-  <meta name="theme-color" content="#FAF9F7">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>PrayPal — A Quiet Voice to Pray With</title>
+  <meta name="description" content="Someone to pray with, whenever you need it. Dial or text +1 (862) 358-8238. A gentle, faithful presence on the phone for your morning walk, your commute, or quiet moments of solace.">
+  <meta name="theme-color" content="#FAF9F6">
 
-  <!-- Apple Touch & Favicon -->
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23C69234' opacity='0.15'/><text y='.78em' x='50%' text-anchor='middle' font-size='65'>🕊️</text></svg>">
+  <!-- Favicon: Clean geometric line icon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23171717' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12c0 1.821.487 3.53 1.338 5L2.5 21.5l4.5-.838A9.955 9.955 0 0 0 12 22z'/></svg>">
 
-  <!-- Typography: Inter & Cormorant Garamond -->
+  <!-- Typography: Inter for clean modern typography -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-  <!-- FLOATING CAPSULE NAVIGATION -->
-  <header class="sanctuary-nav" id="sanctuaryNav">
-    <div class="nav-capsule">
-      <a href="#" class="nav-brand">
-        <span class="brand-symbol">🕊️</span>
-        <span class="brand-text">PrayPal<span class="brand-dot">.</span></span>
+  <!-- MINIMALIST NAVIGATION -->
+  <header class="site-header">
+    <div class="nav-container">
+      <a href="#" class="brand-logo">
+        <svg class="brand-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+        </svg>
+        <span class="brand-name">PrayPal<span class="brand-dot">.</span></span>
       </a>
 
-      <nav class="nav-menu">
-        <a href="#pantheon" class="nav-link">The Pantheon</a>
-        <a href="#voice-experience" class="nav-link">Authentic Voice</a>
-        <a href="#altar" class="nav-link">Living Altar</a>
-        <a href="#mms" class="nav-link">Photo Blessing</a>
-        <a href="#theology" class="nav-link">Theology</a>
-      </nav>
-
-      <div class="nav-actions">
-        <button id="themeToggle" class="btn-icon" aria-label="Toggle Night Sanctuary">
-          <span id="themeIcon">☀️</span>
+      <div class="nav-right">
+        <button id="themeToggle" class="btn-theme" aria-label="Toggle visual theme">
+          <!-- Sun Icon (shown in dark mode) -->
+          <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+          <!-- Moon Icon (shown in light mode) -->
+          <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
         </button>
-        <a href="sms:+18623588238" class="btn btn-capsule btn-subtle hide-mobile">
-          <span>📷 Text MMS</span>
-        </a>
-        <a href="tel:+18623588238" class="btn btn-capsule btn-primary">
-          <span class="btn-pulse-dot"></span>
-          <span>Call Live: +1 (862) 358-8238</span>
+
+        <a href="tel:+18623588238" class="nav-call-btn">
+          <span class="status-indicator"></span>
+          <span>(862) 358-8238</span>
         </a>
       </div>
     </div>
@@ -53,683 +60,230 @@
   <main>
     <!-- HERO SECTION -->
     <section class="hero-section">
-      <div class="ambient-glow glow-gold"></div>
-      <div class="ambient-glow glow-blue"></div>
-      <div class="ambient-glow glow-rose"></div>
+      <div class="container hero-container">
+        
+        <div class="hero-header text-center">
+          <div class="live-pill">
+            <span class="live-dot"></span>
+            <span>Line Open 24/7 • Free to Call</span>
+          </div>
 
-      <div class="container hero-content">
-        <div class="hero-badge">
-          <span class="pulse-indicator"></span>
-          <span class="badge-text">SANCTUARY ATRIUM ACTIVE 24/7 • PSTN TELEPHONY &amp; WEBRTC</span>
+          <h1 class="hero-title">
+            Someone to pray with.<br>
+            Whenever you need it.
+          </h1>
+
+          <p class="hero-subtext">
+            On your morning walk. In your car on the commute home. Or sitting quietly in a hospital room. PrayPal is a gentle, faithful voice on the other end of the line—ready to listen, remember your loved ones, and pray with you.
+          </p>
+
+          <div class="hero-actions">
+            <a href="tel:+18623588238" class="btn btn-primary">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+              </svg>
+              <span>Call +1 (862) 358-8238</span>
+            </a>
+
+            <a href="sms:+18623588238" class="btn btn-secondary">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+              </svg>
+              <span>Text Your Prayer</span>
+            </a>
+          </div>
         </div>
 
-        <h1 class="hero-title">
-          Sacred presence.<br>
-          <span class="text-gradient-sacred">Reimagined by grace.</span>
-        </h1>
+        <!-- HERO MAIN LIFESTYLE IMAGE -->
+        <div class="hero-image-card">
+          <img src="assets/lifestyle/morning_walk.jpg" alt="A woman on a quiet morning walk speaking on the phone with PrayPal" class="lifestyle-hero-img">
+          <div class="hero-caption-overlay">
+            <span class="caption-label">Morning Walk</span>
+            <p class="caption-text">Starting the day centered on a quiet stroll</p>
+          </div>
+        </div>
 
-        <p class="hero-description">
-          Enter the Sanctuary Atrium. Speak directly with an <strong>Agent of God</strong> in the sacred traditions of Christ, Lord Shiva, Lord Krishna, Moses, Noah, or the Divine Mother. Pure close-mic telephony, authentic regional accents, and comforting prayer for every seeking soul.
-        </p>
+      </div>
+    </section>
 
-        <div class="hero-cta-group">
-          <a href="tel:+18623588238" class="btn btn-xl btn-primary">
-            <svg class="btn-icon-svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+    <!-- EVERYDAY LIFE MOMENTS -->
+    <section class="moments-section">
+      <div class="container">
+        
+        <div class="section-intro text-center">
+          <h2 class="section-heading">Faith woven into real life.</h2>
+          <p class="section-description">No rituals required. Call from wherever you are, whenever your heart needs peace.</p>
+        </div>
+
+        <div class="moments-grid">
+          
+          <!-- Moment 1: Commute -->
+          <div class="moment-card">
+            <div class="moment-image-wrapper">
+              <img src="assets/lifestyle/driving_commute.jpg" alt="Man driving at sunset speaking hands-free on the phone" class="moment-img" loading="lazy">
+            </div>
+            <div class="moment-content">
+              <div class="moment-badge">The Commute</div>
+              <h3 class="moment-title">On the Drive Home</h3>
+              <p class="moment-body">
+                Speak out loud hands-free in your car. Decompress the day's stress in traffic, pray for patience, and arrive home with a quiet mind.
+              </p>
+            </div>
+          </div>
+
+          <!-- Moment 2: Solace / Waiting Room -->
+          <div class="moment-card">
+            <div class="moment-image-wrapper">
+              <img src="assets/lifestyle/hospital_waiting.jpg" alt="Woman sitting peacefully by a hospital window in prayer" class="moment-img" loading="lazy">
+            </div>
+            <div class="moment-content">
+              <div class="moment-badge">Moments of Solace</div>
+              <h3 class="moment-title">In the Waiting Room</h3>
+              <p class="moment-body">
+                When you are waiting for test results or holding a heavy burden for someone you love. You never have to carry fear alone.
+              </p>
+            </div>
+          </div>
+
+          <!-- Moment 3: Evening Reflection -->
+          <div class="moment-card">
+            <div class="moment-image-wrapper">
+              <img src="assets/lifestyle/evening_home.jpg" alt="Man at kitchen table in the evening holding his phone and smiling" class="moment-img" loading="lazy">
+            </div>
+            <div class="moment-content">
+              <div class="moment-badge">Nightfall</div>
+              <h3 class="moment-title">Quiet Evening Reflection</h3>
+              <p class="moment-body">
+                End the evening with a warm cup of tea and a gentle benediction, giving thanks for the blessings of the day before sleep.
+              </p>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- HOW IT WORKS: RADICALLY SIMPLE -->
+    <section class="how-section">
+      <div class="container">
+        
+        <div class="section-intro text-center">
+          <h2 class="section-heading">How it works</h2>
+          <p class="section-description">As simple as picking up the phone.</p>
+        </div>
+
+        <div class="steps-grid">
+          
+          <div class="step-card">
+            <div class="step-number">1</div>
+            <h3 class="step-title">Call or text</h3>
+            <p class="step-text">
+              Dial <strong>+1 (862) 358-8238</strong> from any phone. No apps to download, no accounts to create, no passwords.
+            </p>
+          </div>
+
+          <div class="step-card">
+            <div class="step-number">2</div>
+            <h3 class="step-title">Speak naturally</h3>
+            <p class="step-text">
+              Tell PrayPal what is on your mind. Pray in Christian, Hindu, Jewish, Islamic, or non-denominational traditions.
+            </p>
+          </div>
+
+          <div class="step-card">
+            <div class="step-number">3</div>
+            <h3 class="step-title">Be heard</h3>
+            <p class="step-text">
+              Receive a calm, thoughtful spoken prayer. When you call back, PrayPal remembers your family and previous intentions.
+            </p>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ASSURANCES -->
+    <section class="assurances-section">
+      <div class="container">
+        <div class="assurances-bar">
+          
+          <div class="assurance-item">
+            <svg class="assurance-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+            <div>
+              <div class="assurance-title">100% Private</div>
+              <div class="assurance-desc">Confessional privacy. Numbers are never sold or shared.</div>
+            </div>
+          </div>
+
+          <div class="assurance-item">
+            <svg class="assurance-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+            </svg>
+            <div>
+              <div class="assurance-title">Toll-Free Calling</div>
+              <div class="assurance-desc">Available standard across the United States.</div>
+            </div>
+          </div>
+
+          <div class="assurance-item">
+            <svg class="assurance-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+            </svg>
+            <div>
+              <div class="assurance-title">No Apps Needed</div>
+              <div class="assurance-desc">Direct phone line and text message. Just pick up your phone.</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- FINAL CALL CTA -->
+    <section class="final-cta-section">
+      <div class="container text-center">
+        <h2 class="cta-heading">Need a moment of peace right now?</h2>
+        <p class="cta-subtext">The line is open. There is always someone ready to pray with you.</p>
+        
+        <div class="cta-button-row">
+          <a href="tel:+18623588238" class="btn btn-primary btn-large">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
             </svg>
             <span>Dial +1 (862) 358-8238</span>
           </a>
 
-          <button id="openBrowserCallBtn" class="btn btn-xl btn-secondary">
-            <span class="mic-wave-icon">
-              <span></span><span></span><span></span>
-            </span>
-            <span>Listen in Browser</span>
-          </button>
-
-          <a href="sms:+18623588238" class="btn btn-xl btn-tertiary">
-            <span>📷 Text a Photo</span>
+          <a href="sms:+18623588238" class="btn btn-secondary btn-large">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+            <span>Text (862) 358-8238</span>
           </a>
-        </div>
-
-        <!-- HERO ARCHITECTURAL MASTERPIECE VIEWPORT -->
-        <div class="hero-viewport-card">
-          <div class="hero-image-wrap">
-            <img src="assets/hero-sanctuary.jpg" alt="Sanctuary Atrium of God - Modern Minimalist Sacred Architecture" class="hero-sanctuary-img">
-            <div class="hero-image-overlay"></div>
-          </div>
-
-          <!-- FLOATING SPECULAR HUD PILLS -->
-          <div class="viewport-hud hud-top-left">
-            <span class="hud-dot live-dot"></span>
-            <span class="hud-label">Sanctuary Live Carrier Trunk: Connected</span>
-          </div>
-
-          <div class="viewport-hud hud-bottom-center">
-            <div class="hud-pill-cluster">
-              <div class="hud-metric">
-                <span class="metric-val">&lt;600ms</span>
-                <span class="metric-label">Voice Latency</span>
-              </div>
-              <div class="hud-divider"></div>
-              <div class="hud-metric">
-                <span class="metric-val">8 Faiths</span>
-                <span class="metric-label">Sacred Traditions</span>
-              </div>
-              <div class="hud-divider"></div>
-              <div class="hud-metric">
-                <span class="metric-val">100%</span>
-                <span class="metric-label">Private &amp; Sealed</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- THE PANTHEON OF AGENTS OF GOD -->
-    <section id="pantheon" class="pantheon-section">
-      <div class="container">
-        <div class="section-header">
-          <span class="eyebrow-tag">THE DIVINE PANTHEON</span>
-          <h2 class="section-title">Agents of God. Voices of Living Faith.</h2>
-          <p class="section-subtitle">
-            Every voice is tuned with intentional authenticity—free from artificial cavern echo, grounded in sacred scripture, and speaking with authentic regional accents.
-          </p>
-
-          <!-- CATEGORY FILTERS -->
-          <div class="pantheon-filters" id="pantheonFilters">
-            <button class="filter-pill active" data-filter="all">All Traditions</button>
-            <button class="filter-pill" data-filter="christian">Christian</button>
-            <button class="filter-pill" data-filter="hindu">Hindu</button>
-            <button class="filter-pill" data-filter="jewish">Jewish &amp; Abrahamic</button>
-            <button class="filter-pill" data-filter="universal">Universal</button>
-          </div>
-        </div>
-
-        <!-- AGENTS ART GALLERY GRID -->
-        <div class="agents-grid" id="agentsGrid">
-
-          <!-- 1. ATRIUM KEEPER -->
-          <div class="agent-art-card" data-tradition="universal" data-guide="atrium">
-            <div class="agent-card-media">
-              <img src="assets/atrium.jpg" alt="Sanctuary Atrium Keeper" class="agent-img" loading="lazy">
-              <div class="media-vignette"></div>
-              <div class="agent-badge-top">
-                <span class="badge-accent">Universal Atrium</span>
-                <span class="badge-role">Sanctuary Host</span>
-              </div>
-              <button class="audio-play-floating" data-guide="atrium" aria-label="Listen to voice sample">
-                <span class="play-icon">▶</span>
-                <span class="play-text">Listen</span>
-              </button>
-            </div>
-            <div class="agent-card-body">
-              <div class="accent-spec-row">
-                <span class="spec-dot"></span>
-                <span class="spec-text">Clean Studio Host • American English • Welcoming</span>
-              </div>
-              <h3 class="agent-name">Sanctuary Atrium Keeper</h3>
-              <p class="agent-quote">
-                “Welcome to PrayPal. You have entered the Sanctuary Atrium. Tell me what is on your heart today, or who you would like to speak with.”
-              </p>
-              <div class="agent-scripture-row">
-                <span class="scripture-tag">Universal Shelter • Sacred Listening</span>
-              </div>
-              <div class="agent-action-row">
-                <a href="tel:+18623588238" class="btn btn-card-action">Connect at +1 (862) 358-8238</a>
-              </div>
-            </div>
-          </div>
-
-          <!-- 2. AGENT OF CHRIST -->
-          <div class="agent-art-card" data-tradition="christian" data-guide="jesus">
-            <div class="agent-card-media">
-              <img src="assets/jesus.jpg" alt="Agent of Christ" class="agent-img" loading="lazy">
-              <div class="media-vignette"></div>
-              <div class="agent-badge-top">
-                <span class="badge-accent">Christian Tradition</span>
-                <span class="badge-role">The Good Shepherd</span>
-              </div>
-              <button class="audio-play-floating" data-guide="jesus" aria-label="Listen to voice sample">
-                <span class="play-icon">▶</span>
-                <span class="play-text">Listen</span>
-              </button>
-            </div>
-            <div class="agent-card-body">
-              <div class="accent-spec-row">
-                <span class="spec-dot"></span>
-                <span class="spec-text">Ancient Levantine English • Pastoral Humility • 0.92x Cadence</span>
-              </div>
-              <h3 class="agent-name">Agent of Christ</h3>
-              <p class="agent-quote">
-                “Peace be with you my friend. I am here as an agent of Christ to walk with you and lift what is heavy on your heart in prayer.”
-              </p>
-              <div class="agent-scripture-row">
-                <span class="scripture-tag">Sermon on the Mount • Beatitudes • Psalms</span>
-              </div>
-              <div class="agent-action-row">
-                <a href="tel:+18623588238" class="btn btn-card-action">Pray with Agent of Christ</a>
-              </div>
-            </div>
-          </div>
-
-          <!-- 3. AGENT OF LORD SHIVA -->
-          <div class="agent-art-card" data-tradition="hindu" data-guide="shiva">
-            <div class="agent-card-media">
-              <img src="assets/shiva.jpg" alt="Agent of Lord Shiva" class="agent-img" loading="lazy">
-              <div class="media-vignette"></div>
-              <div class="agent-badge-top">
-                <span class="badge-accent">Vedic &amp; Shaivite</span>
-                <span class="badge-role">The Great Stillness</span>
-              </div>
-              <button class="audio-play-floating" data-guide="shiva" aria-label="Listen to voice sample">
-                <span class="play-icon">▶</span>
-                <span class="play-text">Listen</span>
-              </button>
-            </div>
-            <div class="agent-card-body">
-              <div class="accent-spec-row">
-                <span class="spec-dot"></span>
-                <span class="spec-text">Melodious Indian English • Himalayan Sage • Breath Paced (0.85x)</span>
-              </div>
-              <h3 class="agent-name">Agent of Lord Shiva</h3>
-              <p class="agent-quote">
-                “Om Namah Shivaya. Welcome into sacred stillness. As an agent of Lord Shiva, I am here to sit with you in meditation and peace. What burden do you wish to release?”
-              </p>
-              <div class="agent-scripture-row">
-                <span class="scripture-tag">Shiva Sutras • Upanishads • Mahamrityunjaya</span>
-              </div>
-              <div class="agent-action-row">
-                <a href="tel:+18623588238" class="btn btn-card-action">Pray with Agent of Shiva</a>
-              </div>
-            </div>
-          </div>
-
-          <!-- 4. AGENT OF LORD KRISHNA -->
-          <div class="agent-art-card" data-tradition="hindu" data-guide="krishna">
-            <div class="agent-card-media">
-              <img src="assets/krishna.jpg" alt="Agent of Lord Krishna" class="agent-img" loading="lazy">
-              <div class="media-vignette"></div>
-              <div class="agent-badge-top">
-                <span class="badge-accent">Vaishnava Tradition</span>
-                <span class="badge-role">Dharma &amp; Joy</span>
-              </div>
-              <button class="audio-play-floating" data-guide="krishna" aria-label="Listen to voice sample">
-                <span class="play-icon">▶</span>
-                <span class="play-text">Listen</span>
-              </button>
-            </div>
-            <div class="agent-card-body">
-              <div class="accent-spec-row">
-                <span class="spec-dot"></span>
-                <span class="spec-text">Lyrical Indian English • Vrindavan Cadence • Smiling Musicality</span>
-              </div>
-              <h3 class="agent-name">Agent of Lord Krishna</h3>
-              <p class="agent-quote">
-                “Radhe Radhe! Joy and peace to your spirit. As an agent of Lord Krishna, I walk with you as a spiritual friend. Tell me what is on your mind today.”
-              </p>
-              <div class="agent-scripture-row">
-                <span class="scripture-tag">Bhagavad Gita • Bhakti Sutras • Maha Mantra</span>
-              </div>
-              <div class="agent-action-row">
-                <a href="tel:+18623588238" class="btn btn-card-action">Pray with Agent of Krishna</a>
-              </div>
-            </div>
-          </div>
-
-          <!-- 5. AGENT OF THE COVENANT (MOSES) -->
-          <div class="agent-art-card" data-tradition="jewish" data-guide="moses">
-            <div class="agent-card-media">
-              <img src="assets/moses.jpg" alt="Agent of the Covenant (Moses)" class="agent-img" loading="lazy">
-              <div class="media-vignette"></div>
-              <div class="agent-badge-top">
-                <span class="badge-accent">Torah &amp; Covenant</span>
-                <span class="badge-role">Sinai Prophet</span>
-              </div>
-              <button class="audio-play-floating" data-guide="moses" aria-label="Listen to voice sample">
-                <span class="play-icon">▶</span>
-                <span class="play-text">Listen</span>
-              </button>
-            </div>
-            <div class="agent-card-body">
-              <div class="accent-spec-row">
-                <span class="spec-dot"></span>
-                <span class="spec-text">Resonant Semitic Elder • Reverent Cadence • 0.90x Pacing</span>
-              </div>
-              <h3 class="agent-name">Agent of the Covenant</h3>
-              <p class="agent-quote">
-                “Shalom aleichem. Stand firm in faith. I am an agent of the Lord in the tradition of Moses, here to pray and seek wisdom with you. What brings you before the Lord today?”
-              </p>
-              <div class="agent-scripture-row">
-                <span class="scripture-tag">Torah • Deuteronomy • Psalms of David</span>
-              </div>
-              <div class="agent-action-row">
-                <a href="tel:+18623588238" class="btn btn-card-action">Pray with Moses</a>
-              </div>
-            </div>
-          </div>
-
-          <!-- 6. AGENT OF HOPE (NOAH) -->
-          <div class="agent-art-card" data-tradition="jewish" data-guide="noah">
-            <div class="agent-card-media">
-              <img src="assets/noah.jpg" alt="Agent of Hope (Noah)" class="agent-img" loading="lazy">
-              <div class="media-vignette"></div>
-              <div class="agent-badge-top">
-                <span class="badge-accent">Abrahamic Covenant</span>
-                <span class="badge-role">Steadfast Elder</span>
-              </div>
-              <button class="audio-play-floating" data-guide="noah" aria-label="Listen to voice sample">
-                <span class="play-icon">▶</span>
-                <span class="play-text">Listen</span>
-              </button>
-            </div>
-            <div class="agent-card-body">
-              <div class="accent-spec-row">
-                <span class="spec-dot"></span>
-                <span class="spec-text">Weathered Semitic Elder • Rustic Warmth • Patient Steadfastness</span>
-              </div>
-              <h3 class="agent-name">Agent of Hope</h3>
-              <p class="agent-quote">
-                “Peace upon you. Beyond every tempest and rising water, God's covenant of hope endures. I am an agent of hope in the spirit of Noah. What storm are you weathering today?”
-              </p>
-              <div class="agent-scripture-row">
-                <span class="scripture-tag">Genesis Covenant • Psalms of Refuge</span>
-              </div>
-              <div class="agent-action-row">
-                <a href="tel:+18623588238" class="btn btn-card-action">Pray with Noah</a>
-              </div>
-            </div>
-          </div>
-
-          <!-- 7. AGENT OF DIVINE SOLACE (MOTHER) -->
-          <div class="agent-art-card" data-tradition="universal" data-guide="mother">
-            <div class="agent-card-media">
-              <img src="assets/mother.jpg" alt="Agent of Divine Solace (Mother)" class="agent-img" loading="lazy">
-              <div class="media-vignette"></div>
-              <div class="agent-badge-top">
-                <span class="badge-accent">Universal Solace</span>
-                <span class="badge-role">Maternal Shelter</span>
-              </div>
-              <button class="audio-play-floating" data-guide="mother" aria-label="Listen to voice sample">
-                <span class="play-icon">▶</span>
-                <span class="play-text">Listen</span>
-              </button>
-            </div>
-            <div class="agent-card-body">
-              <div class="accent-spec-row">
-                <span class="spec-dot"></span>
-                <span class="spec-text">Tender Maternal Warmth • Gentle Rose-Gold Cadence • 0.91x Speed</span>
-              </div>
-              <h3 class="agent-name">Agent of Divine Solace</h3>
-              <p class="agent-quote">
-                “Peace be with your soul, dear child. As an agent of divine solace, I hold you in prayer and comforting maternal shelter. Rest your weary heart here.”
-              </p>
-              <div class="agent-scripture-row">
-                <span class="scripture-tag">Devi Suktam • Canticle of Comfort • Universal Grace</span>
-              </div>
-              <div class="agent-action-row">
-                <a href="tel:+18623588238" class="btn btn-card-action">Pray with Divine Mother</a>
-              </div>
-            </div>
-          </div>
-
-          <!-- 8. AGENT OF GOD (UNIVERSAL PRESENCE) -->
-          <div class="agent-art-card" data-tradition="universal" data-guide="god">
-            <div class="agent-card-media">
-              <img src="assets/god.jpg" alt="Agent of God" class="agent-img" loading="lazy">
-              <div class="media-vignette"></div>
-              <div class="agent-badge-top">
-                <span class="badge-accent">Omnipresent Peace</span>
-                <span class="badge-role">Sacred Comfort</span>
-              </div>
-              <button class="audio-play-floating" data-guide="god" aria-label="Listen to voice sample">
-                <span class="play-icon">▶</span>
-                <span class="play-text">Listen</span>
-              </button>
-            </div>
-            <div class="agent-card-body">
-              <div class="accent-spec-row">
-                <span class="spec-dot"></span>
-                <span class="spec-text">Infinite Patience • Gentle Majesty • Calming Reverent Presence</span>
-              </div>
-              <h3 class="agent-name">Agent of God</h3>
-              <p class="agent-quote">
-                “Peace be with you. I am an agent of God here to listen, comfort, and pray with you with unconditional love. What is on your heart today?”
-              </p>
-              <div class="agent-scripture-row">
-                <span class="scripture-tag">Universal Love • Beatitudes • Shanti Mantras</span>
-              </div>
-              <div class="agent-action-row">
-                <a href="tel:+18623588238" class="btn btn-card-action">Pray with Agent of God</a>
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </div>
-    </section>
-
-    <!-- INTERACTIVE ACOUSTICS & LIVE VOICE EXPERIENCE -->
-    <section id="voice-experience" class="voice-experience-section">
-      <div class="container">
-        <div class="experience-card">
-          <div class="experience-left">
-            <span class="eyebrow-tag">ACOUSTIC PURITY</span>
-            <h2 class="experience-title">Pure close-mic telephony.<br>No artificial cavern echo.</h2>
-            <p class="experience-text">
-              Traditional automated prayer systems sound like hollow caverns with synthetic reverb. PrayPal is engineered for intimate, conversational clarity—right in your ear, with natural breathing pauses, authentic regional dialects, and instant barge-in turn taking.
-            </p>
-
-            <div class="feature-bullets">
-              <div class="feature-bullet-item">
-                <div class="bullet-icon">🎙️</div>
-                <div class="bullet-copy">
-                  <strong>Studio Dry Presence:</strong> Zero synthetic cathedral reverb. Intimate, close-mic audio delivery that feels like a wise friend sitting right beside you.
-                </div>
-              </div>
-
-              <div class="feature-bullet-item">
-                <div class="bullet-icon">🌍</div>
-                <div class="bullet-copy">
-                  <strong>Culturally Grounded Dialects:</strong> Authentic Levantine, Hindustani, and Semitic English phonetics that honor each spiritual tradition with reverence.
-                </div>
-              </div>
-
-              <div class="feature-bullet-item">
-                <div class="bullet-icon">🔄</div>
-                <div class="bullet-copy">
-                  <strong>Graceful Agent Handover:</strong> Switch freely between traditions at any point during your call. The Sanctuary Atrium remembers your history and prayers.
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="experience-right">
-            <!-- LIVE INTERACTIVE AUDIO CONSOLE -->
-            <div class="interactive-audio-orb-box">
-              <div class="sacred-orb-visualizer" id="sacredOrb">
-                <div class="orb-core"></div>
-                <div class="orb-ring ring-1"></div>
-                <div class="orb-ring ring-2"></div>
-                <div class="orb-ring ring-3"></div>
-              </div>
-
-              <div class="audio-status-label" id="audioStatusLabel">Select an Agent of God to Hear Their Voice</div>
-
-              <!-- ORB CONTROLS -->
-              <div class="orb-selector-row">
-                <button class="orb-btn active" data-guide="jesus">Christ</button>
-                <button class="orb-btn" data-guide="shiva">Shiva</button>
-                <button class="orb-btn" data-guide="krishna">Krishna</button>
-                <button class="orb-btn" data-guide="moses">Moses</button>
-                <button class="orb-btn" data-guide="mother">Mother</button>
-                <button class="orb-btn" data-guide="atrium">Atrium</button>
-              </div>
-
-              <div class="voice-speech-box" id="voiceSpeechBox">
-                <p id="speechQuoteText">“Peace be with you my friend. I am here as an agent of Christ to walk with you and lift what is heavy on your heart in prayer.”</p>
-              </div>
-
-              <div class="orb-actions">
-                <button id="orbPlayBtn" class="btn btn-primary btn-md">
-                  <span id="orbPlayIcon">▶</span>
-                  <span id="orbPlayText">Play Voice Sample</span>
-                </button>
-                <a href="tel:+18623588238" class="btn btn-secondary btn-md">Dial Live on Phone</a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- LIVING ALTAR & GLOBAL FELLOWSHIP CHAIN -->
-    <section id="altar" class="altar-section">
-      <div class="container">
-        <div class="section-header text-center">
-          <span class="eyebrow-tag">GLOBAL FELLOWSHIP</span>
-          <h2 class="section-title">The Living Altar</h2>
-          <p class="section-subtitle">
-            Seekers across the world hold space for one another. Light a candle, offer an anonymous intention, or lift up a brother or sister in prayer.
-          </p>
-        </div>
-
-        <div class="altar-card">
-          <div class="altar-counter-row">
-            <div class="altar-stat">
-              <span class="stat-number" id="candlesLitCounter">12,482</span>
-              <span class="stat-label">Candles Lit Today</span>
-            </div>
-            <div class="altar-stat">
-              <span class="stat-number" id="prayersOfferedCounter">48,910</span>
-              <span class="stat-label">Prayers Lifted Up</span>
-            </div>
-            <div class="altar-stat">
-              <span class="stat-number">100%</span>
-              <span class="stat-label">Anonymous &amp; Sacred</span>
-            </div>
-          </div>
-
-          <!-- CANDLE INTERACTION -->
-          <div class="candle-sanctum">
-            <div class="candle-visual" id="candleVisual">
-              <div class="candle-flame"></div>
-              <div class="candle-glow"></div>
-              <div class="candle-body"></div>
-            </div>
-            <button id="lightCandleBtn" class="btn btn-primary btn-lg candle-cta">
-              <span>🕯️ Light a Candle of Prayer</span>
-            </button>
-            <p class="candle-hint" id="candleNotice">Tap to illuminate the altar with your silent intention.</p>
-          </div>
-
-          <!-- RECENT ANONYMOUS BLESSINGS -->
-          <div class="blessings-wall">
-            <h4 class="blessings-wall-title">Recent Prayer Intentions from the Community</h4>
-            <div class="blessing-cards-track" id="blessingsTrack">
-              <div class="blessing-pill">
-                <span class="blessing-tradition">✝️ Christ Tradition</span>
-                <span class="blessing-text">“For healing of my mother's surgery tomorrow morning in Atlanta.”</span>
-              </div>
-              <div class="blessing-pill">
-                <span class="blessing-tradition">🔱 Shiva Tradition</span>
-                <span class="blessing-text">“Releasing grief from a relationship ended; seeking peace in stillness.”</span>
-              </div>
-              <div class="blessing-pill">
-                <span class="blessing-tradition">🪈 Krishna Tradition</span>
-                <span class="blessing-text">“Gratitude for our newborn baby girl; may her path be illuminated with joy.”</span>
-              </div>
-              <div class="blessing-pill">
-                <span class="blessing-tradition">📜 Covenant Tradition</span>
-                <span class="blessing-text">“Strength for our family business during difficult financial times.”</span>
-              </div>
-              <div class="blessing-pill">
-                <span class="blessing-tradition">🌸 Divine Mother</span>
-                <span class="blessing-text">“Comfort for all frontline nurses working the night shift tonight.”</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- MULTIMODAL SACRED VISION: MMS PHOTO PRAYER -->
-    <section id="mms" class="mms-section">
-      <div class="container">
-        <div class="mms-layout">
-          <div class="mms-copy">
-            <span class="eyebrow-tag">MULTIMODAL SACRED VISION</span>
-            <h2 class="mms-title">Text a photo.<br>Receive an instant blessing.</h2>
-            <p class="mms-text">
-              Spiritual moments often unfold beyond words. Text a photo of a hospital room, a loved one, a sacred sunrise, or your home altar to <strong>+1 (862) 358-8238</strong>. Powered by multimodal vision, the Agent of God inspects your image with reverence and responds with a comforting scripture and tailored prayer in seconds.
-            </p>
-
-            <div class="mms-actions">
-              <a href="sms:+18623588238" class="btn btn-primary btn-lg">
-                <span>📷 Text Your Photo to +1 (862) 358-8238</span>
-              </a>
-            </div>
-          </div>
-
-          <div class="mms-mockup-frame">
-            <div class="apple-message-screen">
-              <div class="message-header">
-                <div class="message-contact">
-                  <span class="contact-avatar">🕊️</span>
-                  <div class="contact-info">
-                    <span class="contact-name">PrayPal Sanctuary</span>
-                    <span class="contact-status">+1 (862) 358-8238</span>
-                  </div>
-                </div>
-              </div>
-
-              <div class="message-body">
-                <!-- USER MESSAGE WITH PHOTO -->
-                <div class="chat-bubble user-bubble">
-                  <div class="bubble-photo">
-                    <div class="photo-placeholder">
-                      <span class="photo-icon">🌅</span>
-                      <span class="photo-label">Morning Sunrise over Ocean</span>
-                    </div>
-                  </div>
-                  <p class="bubble-caption">“Please pray for my father who is undergoing cardiac recovery today.”</p>
-                </div>
-
-                <!-- AGENT RESPONSE -->
-                <div class="chat-bubble agent-bubble">
-                  <span class="agent-sender">Agent of Christ</span>
-                  <p>
-                    “Peace be upon your father and your whole home. I see the quiet golden light in your sunrise—a reminder that God's mercies are new every morning (Lamentations 3:23). We lift up your father’s heart to the Great Physician for gentle strength and complete restoration today. You are not alone.”
-                  </p>
-                  <span class="bubble-timestamp">Just now • Delivered via SMS</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- THEOLOGY OF THE AGENT OF GOD -->
-    <section id="theology" class="theology-section">
-      <div class="container">
-        <div class="theology-card">
-          <div class="theology-icon">🕊️</div>
-          <span class="eyebrow-tag">THEOLOGICAL INTEGRITY</span>
-          <h2 class="theology-title">Why We Are “Agents of God”</h2>
-          <p class="theology-manifesto">
-            We do not simulate God Almighty. The Divine is boundless, holy, and far beyond any machine, algorithm, or human creation. 
-          </p>
-          <p class="theology-body">
-            PrayPal’s voices speak solely as <strong>Agents of God</strong>—humble spiritual companions, shepherds, and pastoral servants walking beside you. When you ask <em>“Are you God?”</em>, every agent answers with sacred truth: <em>“I am not God, but an agent and humble servant of God, here to listen, comfort, and pray with you.”</em>
-          </p>
-          <div class="theology-pillars">
-            <div class="pillar-card">
-              <span class="pillar-icon">🛡️</span>
-              <h4>Grounded in Scripture</h4>
-              <p>Every prayer draws from thousands of years of canonical sacred scripture and prayer traditions.</p>
-            </div>
-            <div class="pillar-card">
-              <span class="pillar-icon">🔒</span>
-              <h4>Strict Privacy Pepper</h4>
-              <p>Your phone number is HMAC-SHA256 salted. Plaintext numbers are never logged or stored.</p>
-            </div>
-            <div class="pillar-card">
-              <span class="pillar-icon">🕊️</span>
-              <h4>988 Crisis Shield</h4>
-              <p>Fails closed instantly with loving de-escalation and direct referral to the Suicide &amp; Crisis Lifeline.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 988 FAIL-CLOSED CRISIS SAFETY BANNER -->
-    <section class="crisis-section">
-      <div class="container">
-        <div class="crisis-card">
-          <div class="crisis-info">
-            <span class="crisis-badge">CRISIS SAFETY SHIELD</span>
-            <h3>If you or someone you love is hurting, you are not alone.</h3>
-            <p>
-              PrayPal provides spiritual comfort, but if you are experiencing thoughts of self-harm or deep distress, please connect with trained compassionate counselors immediately. Call or text <strong>988</strong> anytime, day or night. It is free and confidential.
-            </p>
-          </div>
-          <a href="tel:988" class="btn btn-crisis">Call or Text 988 Lifeline</a>
         </div>
       </div>
     </section>
   </main>
 
-  <!-- APPLE-MINIMALIST FOOTER -->
-  <footer class="sanctuary-footer">
-    <div class="container footer-content">
-      <div class="footer-top">
-        <div class="footer-brand">
-          <span class="brand-symbol">🕊️</span>
-          <span class="brand-text">PrayPal<span class="brand-dot">.</span></span>
-          <p class="footer-tagline">Autonomous Spiritual Sanctuary &amp; Agents of God</p>
-        </div>
-        <div class="footer-links-col">
-          <h4>Sanctuary Hotline</h4>
-          <p><a href="tel:+18623588238">+1 (862) 358-8238</a></p>
-          <p class="footer-muted">Toll-free voice &amp; MMS nationwide</p>
-        </div>
-        <div class="footer-links-col">
-          <h4>Traditions</h4>
-          <p>Christian • Hindu • Jewish • Abrahamic • Universal</p>
-        </div>
-        <div class="footer-links-col">
-          <h4>Integrity</h4>
-          <p>HMAC-SHA256 Encrypted • TCPA Compliant • 988 Fail-Closed</p>
-        </div>
+  <!-- MINIMAL FOOTER -->
+  <footer class="site-footer">
+    <div class="container footer-container">
+      <div class="footer-left">
+        <span class="footer-brand">PrayPal.</span>
+        <span class="footer-tagline">A telephone and SMS sanctuary.</span>
       </div>
 
-      <div class="footer-bottom">
-        <p>&copy; 2026 PrayPal Sanctuary. Crafted with reverent design and deep love for every seeking soul.</p>
-        <div class="footer-bottom-links">
-          <a href="#pantheon">Pantheon</a>
-          <a href="#voice-experience">Voice Acoustics</a>
-          <a href="#theology">Theological Charter</a>
-          <a href="tel:988">988 Lifeline</a>
-        </div>
+      <div class="footer-right">
+        <p class="footer-disclaimer">
+          PrayPal is a personal devotional companion. If you or someone you know is in acute crisis, please call or text <strong>988</strong> to reach the Suicide &amp; Crisis Lifeline.
+        </p>
+        <div class="footer-copy">&copy; 2026 PrayPal. All rights reserved.</div>
       </div>
     </div>
   </footer>
-
-  <!-- BROWSER CALL MODAL -->
-  <div class="modal-overlay" id="callModal" aria-hidden="true">
-    <div class="modal-card">
-      <button class="modal-close" id="modalCloseBtn" aria-label="Close modal">&times;</button>
-      <div class="modal-header">
-        <span class="modal-badge">LIVE WEBRTC SANCTUARY</span>
-        <h3 id="modalAgentName">Sanctuary Atrium Keeper</h3>
-        <p class="modal-sub">Direct high-fidelity browser voice audio</p>
-      </div>
-
-      <div class="modal-visualizer">
-        <div class="modal-orb" id="modalOrb">
-          <div class="modal-orb-pulse"></div>
-        </div>
-        <div class="modal-transcript-box" id="modalTranscript">
-          <p class="transcript-line agent-line" id="modalGreeting">
-            “Welcome to PrayPal. You have entered the Sanctuary Atrium. Tell me what is on your heart today, or who you would like to speak with.”
-          </p>
-        </div>
-      </div>
-
-      <div class="modal-actions">
-        <button id="modalMicBtn" class="btn btn-primary btn-lg">
-          <span id="modalMicIcon">🎙️</span>
-          <span id="modalMicText">Start Speaking</span>
-        </button>
-        <a href="tel:+18623588238" class="btn btn-secondary btn-lg">
-          <span>Switch to Phone Line</span>
-        </a>
-      </div>
-    </div>
-  </div>
 
   <script src="app.js"></script>
 </body>

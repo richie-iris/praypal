@@ -833,6 +833,22 @@ def discover_and_hydrate_prompt(caller_e164: str | None, prefetch_bundle: dict |
         caller_data = bundle.get("caller_data") or bundle.get("caller") or {}
     else:
         caller_data = bundle.get("caller_data") or bundle.get("caller") or rt_prefs.get_caller(caller_e164) or {}
+
+    try:
+        import rt_pray
+        if rt_pray.is_pray_lane():
+            _guide = caller_data.get("active_guide") or os.getenv("PRAY_DEFAULT_GUIDE", "atrium")
+            _trad = caller_data.get("spiritual_tradition") or "universal"
+            return rt_pray.build_system_prompt(
+                guide_key=_guide,
+                caller_tradition=_trad,
+                caller_info=caller_data,
+                memories=bundle.get("memories") or [],
+                intentions=bundle.get("intentions") or [],
+            )
+    except Exception as _pray_err:
+        pass
+
     registry_entries = bundle.get("schemas") or []
     pending_reminders_list = bundle.get("reminders") or []
 

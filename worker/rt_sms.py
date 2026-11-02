@@ -130,6 +130,9 @@ _HISTORY: dict[str, list[dict]] = {}   # per-hash mirror, read only when the fil
 _SMS_LOCK = threading.Lock()
 _LAST_SWEEP = 0.0
 
+_OPT_OUTS: set[str] = set()
+_OPT_OUT_LOCK = threading.Lock()
+
 
 def _ledger_dir() -> str:
     d = (os.getenv("RT_SMS_LEDGER_DIR") or "").strip() or _DEFAULT_LEDGER_DIR
@@ -173,6 +176,45 @@ def _ledger_key(phone_e164: str | None) -> str | None:
 
 def _ledger_path(key: str) -> str:
     return os.path.join(_ledger_dir(), f"{key}.json")
+
+
+def _opt_out_path(key: str) -> str:
+    return os.path.join(_ledger_dir(), f"{key}.optout")
+
+
+def is_opted_out(phone_e164: str) -> bool:
+    """Check whether caller has opted out via STOP / UNSUBSCRIBE under TCPA/CTIA."""
+    key = _ledger_key(phone_e164)
+    if not key:
+        return False
+    with _OPT_OUT_LOCK:
+        if key in _OPT_OUTS:
+            return True
+        path = _opt_out_path(key)
+        if os.path.exists(path):
+            _OPT_OUTS.add(key)
+            return True
+        return False
+
+
+def set_opt_out(phone_e164: str, opted_out: bool) -> None:
+    """Record opt-out or opt-in status per caller phone hash."""
+    key = _ledger_key(phone_e164)
+    if not key:
+        return
+    with _OPT_OUT_LOCK:
+        path = _opt_out_path(key)
+        if opted_out:
+            _OPT_OUTS.add(key)
+            try:
+                with open(path, "w") as f:
+                    f.write(str(time.time()))
+            except Exception as exc:
+                _obs.caught("rt_sms.set_opt_out", exc)
+        else:
+            _OPT_OUTS.discard(key)
+            with contextlib.suppress(FileNotFoundError):
+                os.remove(path)
 
 
 @contextlib.contextmanager
@@ -306,6 +348,10 @@ def forget(phone_e164: str) -> bool:
             existed = os.path.exists(path)
             with contextlib.suppress(FileNotFoundError):
                 os.remove(path)
+            with _OPT_OUT_LOCK:
+                _OPT_OUTS.discard(key)
+                with contextlib.suppress(FileNotFoundError):
+                    os.remove(_opt_out_path(key))
         return existed
     except Exception as exc:
         _obs.caught("rt_sms.forget", exc)
@@ -357,7 +403,8 @@ def _maybe_sweep() -> None:
 # ── Sending ──────────────────────────────────────────────────────────────────
 
 def send_sms(to_e164: str, body: str, from_number: str | None = None,
-             media_url: str | list[str] | None = None) -> dict:
+             media_url: str | list[str] | None = None,
+             allow_opt_out_reply: bool = False) -> dict:
     """Send an SMS, or an MMS when media_url is given, through Twilio.
 
     to_e164: recipient in E.164 (+1XXXXXXXXXX)
@@ -376,6 +423,10 @@ def send_sms(to_e164: str, body: str, from_number: str | None = None,
                 "message": "TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN not configured."}
     if not to_e164 or not str(to_e164).startswith("+"):
         return {"error": True, "sid": None, "message": f"Invalid recipient: {to_e164!r}"}
+
+    if not allow_opt_out_reply and is_opted_out(to_e164):
+        _obs.warn("sms.refused_opt_out", to=_mask(to_e164))
+        return {"error": True, "sid": None, "message": "Recipient has opted out of SMS (TCPA)."}
 
     body = (body or "").strip()
     if not body and not media_url:
